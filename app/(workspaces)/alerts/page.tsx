@@ -14,6 +14,7 @@ import {
   saveGlobalAlertPolicy,
   saveTenantAlertPolicy,
   saveTenantNotificationSettings,
+  testTenantTelegramRouting,
 } from "@/services/alertingService";
 import { listTenantServers, listTenants, type ServerResponse, type TenantResponse } from "@/services/workspaceService";
 import type { AlertSilence, UpsertAlertPolicyInput, UpsertTenantNotificationSettingsInput } from "@/types/alerting";
@@ -176,6 +177,7 @@ export default function AlertsPage() {
   const [isSavingGlobal, setIsSavingGlobal] = useState(false);
   const [isSavingTenantPolicy, setIsSavingTenantPolicy] = useState(false);
   const [isSavingNotification, setIsSavingNotification] = useState(false);
+  const [isTestingNotification, setIsTestingNotification] = useState(false);
   const [isSavingSilence, setIsSavingSilence] = useState(false);
   const [isLoadingSilences, setIsLoadingSilences] = useState(false);
 
@@ -359,6 +361,27 @@ export default function AlertsPage() {
       setError(message);
     } finally {
       setIsSavingNotification(false);
+    }
+  };
+
+  const handleTestTelegramRouting = async () => {
+    setNotificationMessage(null);
+    setError(null);
+
+    if (!selectedTenantId) {
+      setError("Select a tenant first.");
+      return;
+    }
+
+    setIsTestingNotification(true);
+    try {
+      await testTenantTelegramRouting("", selectedTenantId, notificationSettings);
+      setNotificationMessage("Telegram test message sent successfully.");
+    } catch (testError) {
+      const message = testError instanceof Error ? testError.message : "Unable to send Telegram test message.";
+      setError(message);
+    } finally {
+      setIsTestingNotification(false);
     }
   };
 
@@ -724,13 +747,24 @@ export default function AlertsPage() {
 
             {notificationMessage ? <p className="mt-4 text-sm text-[#7bd7a6]">{notificationMessage}</p> : null}
 
-            <button
-              type="submit"
-              disabled={!canManageSettings || isSavingNotification}
-              className="app-button-primary mt-6 inline-flex h-11 items-center justify-center rounded-xl px-6 text-sm font-medium disabled:opacity-60"
-            >
-              {isSavingNotification ? "Saving..." : "Save Telegram Settings"}
-            </button>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => void handleTestTelegramRouting()}
+                disabled={!canManageSettings || isSavingNotification || isTestingNotification}
+                className="app-button-secondary inline-flex h-11 items-center justify-center rounded-xl px-6 text-sm font-medium disabled:opacity-60"
+              >
+                {isTestingNotification ? "Sending test..." : "Send Test Telegram"}
+              </button>
+
+              <button
+                type="submit"
+                disabled={!canManageSettings || isSavingNotification || isTestingNotification}
+                className="app-button-primary inline-flex h-11 items-center justify-center rounded-xl px-6 text-sm font-medium disabled:opacity-60"
+              >
+                {isSavingNotification ? "Saving..." : "Save Telegram Settings"}
+              </button>
+            </div>
           </form>
 
           <form onSubmit={handleSaveTenantPolicy} className="app-card mt-8 rounded-[18px] p-6">

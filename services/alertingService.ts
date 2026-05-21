@@ -38,6 +38,20 @@ export async function saveTenantNotificationSettings(
   );
 }
 
+export async function testTenantTelegramRouting(
+  accessToken: string,
+  tenantId: string,
+  payload: UpsertTenantNotificationSettingsInput,
+): Promise<void> {
+  await apiPost<void, UpsertTenantNotificationSettingsInput>(
+    `/api/v1/notification-settings/tenants/${tenantId}/telegram/test`,
+    payload,
+    {
+      headers: buildAuthHeaders(accessToken),
+    },
+  );
+}
+
 export async function getGlobalAlertPolicy(accessToken: string): Promise<AlertPolicy> {
   return apiGet<AlertPolicy>("/api/v1/alert-policies/global", {
     headers: buildAuthHeaders(accessToken),
