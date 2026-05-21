@@ -587,26 +587,39 @@ export default function AlertsPage() {
             ALERT CONTROL
           </div>
 
-          <h1 className="mt-5 text-[42px] font-semibold leading-none text-[var(--app-text)]">Alert Settings</h1>
-          <p className="app-text-soft mt-3 max-w-[720px] text-[17px] leading-[22px]">
+          <h1 className="mt-5 text-[34px] font-semibold leading-none text-[var(--app-text)] lg:text-[38px]">
+            Alert Settings
+          </h1>
+          <p className="app-text-soft mt-3 max-w-[680px] text-[14px] leading-[20px]">
             Configure Telegram routing and threshold policies. Admin and owner can save changes. Members can view only.
           </p>
 
           {error ? <p className="mt-6 text-sm text-[#ff9b7a]">{error}</p> : null}
 
           {isAdmin ? (
-            <section className="app-card mt-8 rounded-[18px] p-6">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <h2 className="text-[22px] font-semibold text-[var(--app-text)]">Tenant Scope</h2>
-                <label className="flex items-center gap-3 text-sm">
-                  <span className="app-text-soft">Tenant</span>
+            <section className="app-card mt-6 rounded-[18px] border border-white/8 bg-[#121826] p-4 shadow-[0_14px_32px_rgba(0,0,0,0.18)] lg:p-5">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <div className="inline-flex rounded-full bg-[#241b10] px-3 py-1 text-[10px] font-medium uppercase tracking-[0.12em] text-[#d7a66b]">
+                    Scope
+                  </div>
+                  <h2 className="mt-2 text-[18px] font-semibold text-[var(--app-text)] lg:text-[20px]">
+                    Tenant Scope
+                  </h2>
+                  <p className="app-text-soft mt-1 text-[12px] leading-[18px]">
+                    Select the tenant you want to manage. Server scope updates below will follow this selection.
+                  </p>
+                </div>
+
+                <label className="flex min-w-[250px] flex-1 items-center gap-2 text-sm md:flex-none md:justify-end">
+                  <span className="app-text-soft shrink-0 text-[12px]">Tenant</span>
                   <select
                     value={selectedTenantId}
                     onChange={(event) => {
                       setSelectedTenantId(event.target.value);
                       setSelectedServerId("");
                     }}
-                    className="app-input h-11 min-w-[220px] rounded-xl px-4 text-[14px]"
+                    className="app-input h-11 w-full max-w-[220px] rounded-xl border border-white/10 px-3 text-[13px] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] md:w-[220px]"
                   >
                     {tenants.map((tenant) => (
                       <option key={tenant.id} value={tenant.id}>
@@ -620,16 +633,27 @@ export default function AlertsPage() {
           ) : null}
 
           {canManageSettings ? (
-            <section className="app-card mt-8 rounded-[18px] p-6">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <h2 className="text-[22px] font-semibold text-[var(--app-text)]">Server Scope</h2>
-                <label className="flex items-center gap-3 text-sm">
-                  <span className="app-text-soft">Server</span>
+            <section className="app-card mt-5 rounded-[18px] border border-white/8 bg-[#121826] p-4 shadow-[0_14px_32px_rgba(0,0,0,0.18)] lg:p-5">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <div className="inline-flex rounded-full bg-[#162437] px-3 py-1 text-[10px] font-medium uppercase tracking-[0.12em] text-[#8db6ff]">
+                    Scope
+                  </div>
+                  <h2 className="mt-2 text-[18px] font-semibold text-[var(--app-text)] lg:text-[20px]">
+                    Server Scope
+                  </h2>
+                  <p className="app-text-soft mt-1 text-[12px] leading-[18px]">
+                    Choose a server under the selected tenant to edit its alert policy.
+                  </p>
+                </div>
+
+                <label className="flex min-w-[250px] flex-1 items-center gap-2 text-sm md:flex-none md:justify-end">
+                  <span className="app-text-soft shrink-0 text-[12px]">Server</span>
                   <select
                     value={selectedServerId}
                     onChange={(event) => setSelectedServerId(event.target.value)}
                     disabled={!tenantServers.length}
-                    className="app-input h-11 min-w-[220px] rounded-xl px-4 text-[14px]"
+                    className="app-input h-11 w-full max-w-[220px] rounded-xl border border-white/10 px-3 text-[13px] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] md:w-[220px]"
                   >
                     <option value="">{tenantServers.length ? "Select a server" : "No servers available"}</option>
                     {tenantServers.map((server) => (
@@ -641,9 +665,11 @@ export default function AlertsPage() {
                 </label>
               </div>
 
-              <p className="app-text-soft mt-4 text-[13px]">
-                Choose a tenant first, then select a server to edit its server-level alert policy.
-              </p>
+              <div className="mt-3 rounded-xl border border-white/6 bg-black/10 px-3 py-2.5">
+                <p className="app-text-soft text-[12px] leading-[18px]">
+                  Server-level thresholds override tenant and global defaults for the selected server only.
+                </p>
+              </div>
             </section>
           ) : null}
 
