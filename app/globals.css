@@ -3,6 +3,23 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --font-geist-sans: "Aptos", "Segoe UI Variable", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-geist-mono: "JetBrains Mono", "SFMono-Regular", "Roboto Mono", Consolas, monospace;
+  --app-bg-start: #1a2330;
+  --app-bg-mid: #0d131b;
+  --app-bg-end: #080d14;
+  --app-surface: #11161d;
+  --app-surface-elevated: #171d26;
+  --app-surface-muted: #131922;
+  --app-surface-soft: #18202a;
+  --app-border: #252f3d;
+  --app-border-strong: #31425b;
+  --app-text: #f2f5fa;
+  --app-text-soft: #8ea0bb;
+  --app-text-faint: #687991;
+  --app-accent: #fc7342;
+  --app-accent-soft: #ffb38f;
+  --app-info: #9ec4ff;
 }
 
 @theme inline {
@@ -22,5 +39,168 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.app-shell-bg {
+  background: radial-gradient(circle at top, var(--app-bg-start) 0%, var(--app-bg-mid) 32%, var(--app-bg-end) 100%);
+  color: var(--app-text);
+  font-family: var(--font-sans);
+  font-kerning: normal;
+  letter-spacing: 0.01em;
+}
+
+.app-shell-bg h1,
+.app-shell-bg h2,
+.app-shell-bg h3,
+.app-shell-bg h4,
+.app-shell-bg h5,
+.app-shell-bg h6 {
+  letter-spacing: -0.03em;
+  font-weight: 600;
+}
+
+.app-shell-bg button,
+.app-shell-bg input,
+.app-shell-bg select,
+.app-shell-bg textarea {
+  font-family: var(--font-sans);
+  letter-spacing: 0.01em;
+}
+
+.app-shell-bg code,
+.app-shell-bg pre,
+.app-shell-bg .font-mono {
+  font-family: var(--font-mono);
+}
+
+.app-kicker {
+  color: var(--app-text-faint);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.app-section-title {
+  color: var(--app-text);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.app-page-title {
+  color: var(--app-text);
+  font-size: clamp(2rem, 4vw, 2.625rem);
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 0.95;
+}
+
+.app-label {
+  color: var(--app-text-soft);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.app-panel {
+  border: 1px solid var(--app-border);
+  background: linear-gradient(180deg, #171d26 0%, #11161e 100%);
+  box-shadow: 0 18px 45px rgba(4, 8, 16, 0.28);
+}
+
+.app-panel-soft {
+  border: 1px solid var(--app-border);
+  background: linear-gradient(180deg, #141b24 0%, #10161d 100%);
+}
+
+.app-card {
+  border: 1px solid #27303d;
+  background: linear-gradient(180deg, #191f28 0%, #12171f 100%);
+}
+
+.app-toolbar {
+  border: 1px solid var(--app-border);
+  background: #0f141b;
+}
+
+.app-input {
+  border: 1px solid var(--app-border);
+  background: #151b24;
+  color: var(--app-text);
+}
+
+.app-input::placeholder {
+  color: var(--app-text-faint);
+}
+
+.app-button-primary {
+  background: var(--app-accent);
+  color: var(--app-text);
+}
+
+.app-button-secondary {
+  border: 1px solid var(--app-border);
+  background: #151b24;
+  color: var(--app-text-soft);
+}
+
+.app-button-secondary:hover {
+  border-color: var(--app-border-strong);
+  color: var(--app-text);
+}
+
+.app-text-soft {
+  color: var(--app-text-soft);
+}
+
+.app-text-faint {
+  color: var(--app-text-faint);
+}
+
+@keyframes metric-card-refresh-overlay {
+  0% {
+    opacity: 0.18;
+  }
+
+  50% {
+    opacity: 0.34;
+  }
+
+  100% {
+    opacity: 0.18;
+  }
+}
+
+@keyframes metric-card-refresh-sheen {
+  0% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+
+  18% {
+    opacity: 0.72;
+  }
+
+  100% {
+    transform: translateX(420%);
+    opacity: 0;
+  }
+}
+
+.metric-card-refresh-overlay {
+  background: radial-gradient(circle at top, rgba(87, 166, 255, 0.12) 0%, rgba(87, 166, 255, 0.03) 42%, rgba(87, 166, 255, 0) 75%);
+  animation: metric-card-refresh-overlay 1.35s ease-in-out infinite;
+}
+
+.metric-card-refresh-sheen {
+  background: linear-gradient(90deg, rgba(87, 166, 255, 0), rgba(87, 166, 255, 0.2), rgba(252, 115, 66, 0.18), rgba(87, 166, 255, 0));
+  filter: blur(16px);
+  animation: metric-card-refresh-sheen 1.15s cubic-bezier(0.22, 1, 0.36, 1) infinite;
 }
