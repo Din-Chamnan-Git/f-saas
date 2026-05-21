@@ -8,10 +8,12 @@ import {
   createAlertSilence,
   deleteAlertSilence,
   getGlobalAlertPolicy,
+  getServerAlertPolicy,
   listAlertSilences,
   getTenantAlertPolicy,
   getTenantNotificationSettings,
   saveGlobalAlertPolicy,
+  saveServerAlertPolicy,
   saveTenantAlertPolicy,
   saveTenantNotificationSettings,
   testTenantTelegramRouting,
@@ -132,6 +134,34 @@ function valueOrEmpty(value: number | null): string {
   return value == null ? "" : String(value);
 }
 
+function alertPolicyToInput(policy: {
+  cpuUsagePercent: number | null;
+  memoryUsagePercent: number | null;
+  diskFreePercent: number | null;
+  serverDownForMinutes: number | null;
+  containerDownForMinutes: number | null;
+  containerRestartCount: number | null;
+  customMetricName: string | null;
+  customPromqlQuery: string | null;
+  customComparison: UpsertAlertPolicyInput["customComparison"];
+  customThreshold: number | null;
+  enabled: boolean;
+}): UpsertAlertPolicyInput {
+  return {
+    cpuUsagePercent: policy.cpuUsagePercent,
+    memoryUsagePercent: policy.memoryUsagePercent,
+    diskFreePercent: policy.diskFreePercent,
+    serverDownForMinutes: policy.serverDownForMinutes,
+    containerDownForMinutes: policy.containerDownForMinutes,
+    containerRestartCount: policy.containerRestartCount,
+    customMetricName: policy.customMetricName,
+    customPromqlQuery: policy.customPromqlQuery,
+    customComparison: policy.customComparison,
+    customThreshold: policy.customThreshold,
+    enabled: policy.enabled,
+  };
+}
+
 function localInputToIso(value: string): string | null {
   const trimmed = value.trim();
   if (!trimmed) {
@@ -150,9 +180,11 @@ export default function AlertsPage() {
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [tenants, setTenants] = useState<TenantResponse[]>([]);
   const [selectedTenantId, setSelectedTenantId] = useState("");
+  const [selectedServerId, setSelectedServerId] = useState("");
 
   const [globalPolicy, setGlobalPolicy] = useState<UpsertAlertPolicyInput>(EMPTY_POLICY);
   const [tenantPolicy, setTenantPolicy] = useState<UpsertAlertPolicyInput>(EMPTY_POLICY);
+  const [serverPolicy, setServerPolicy] = useState<UpsertAlertPolicyInput>(EMPTY_POLICY);
   const [notificationSettings, setNotificationSettings] = useState<UpsertTenantNotificationSettingsInput>(EMPTY_NOTIFICATION);
   const [tenantServers, setTenantServers] = useState<ServerResponse[]>([]);
   const [silences, setSilences] = useState<AlertSilence[]>([]);
@@ -168,6 +200,7 @@ export default function AlertsPage() {
 
   const [globalMessage, setGlobalMessage] = useState<string | null>(null);
   const [tenantMessage, setTenantMessage] = useState<string | null>(null);
+  const [serverMessage, setServerMessage] = useState<string | null>(null);
   const [notificationMessage, setNotificationMessage] = useState<string | null>(null);
   const [silenceMessage, setSilenceMessage] = useState<string | null>(null);
   const [selectedPromqlPresetKey, setSelectedPromqlPresetKey] = useState<string>("none");
@@ -176,10 +209,12 @@ export default function AlertsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingGlobal, setIsSavingGlobal] = useState(false);
   const [isSavingTenantPolicy, setIsSavingTenantPolicy] = useState(false);
+  const [isSavingServerPolicy, setIsSavingServerPolicy] = useState(false);
   const [isSavingNotification, setIsSavingNotification] = useState(false);
   const [isTestingNotification, setIsTestingNotification] = useState(false);
   const [isSavingSilence, setIsSavingSilence] = useState(false);
   const [isLoadingSilences, setIsLoadingSilences] = useState(false);
+  const [isLoadingServerPolicy, setIsLoadingServerPolicy] = useState(false);
 
   const canManageSettings = userRole === "admin" || userRole === "owner";
   const isAdmin = userRole === "admin";
@@ -187,6 +222,11 @@ export default function AlertsPage() {
   const selectedTenant = useMemo(
     () => tenants.find((tenant) => tenant.id === selectedTenantId) ?? null,
     [tenants, selectedTenantId],
+  );
+
+  const selectedServer = useMemo(
+    () => tenantServers.find((server) => server.id === selectedServerId) ?? null,
+    [selectedServerId, tenantServers],
   );
 
   useEffect(() => {
@@ -206,19 +246,7 @@ export default function AlertsPage() {
             listTenants(accessToken),
           ]);
 
-          setGlobalPolicy({
-            cpuUsagePercent: global.cpuUsagePercent,
-            memoryUsagePercent: global.memoryUsagePercent,
-            diskFreePercent: global.diskFreePercent,
-            serverDownForMinutes: global.serverDownForMinutes,
-            containerDownForMinutes: global.containerDownForMinutes,
-            containerRestartCount: global.containerRestartCount,
-            customMetricName: global.customMetricName,
-            customPromqlQuery: global.customPromqlQuery,
-            customComparison: global.customComparison,
-            customThreshold: global.customThreshold,
-            enabled: global.enabled,
-          });
+          setGlobalPolicy(alertPolicyToInput(global));
 
           setTenants(tenantRows);
           setSelectedTenantId((current) => current || tenantRows[0]?.id || "");
@@ -267,19 +295,7 @@ export default function AlertsPage() {
           }),
         ]);
 
-        setTenantPolicy({
-          cpuUsagePercent: tenantPolicyResponse.cpuUsagePercent,
-          memoryUsagePercent: tenantPolicyResponse.memoryUsagePercent,
-          diskFreePercent: tenantPolicyResponse.diskFreePercent,
-          serverDownForMinutes: tenantPolicyResponse.serverDownForMinutes,
-          containerDownForMinutes: tenantPolicyResponse.containerDownForMinutes,
-          containerRestartCount: tenantPolicyResponse.containerRestartCount,
-          customMetricName: tenantPolicyResponse.customMetricName,
-          customPromqlQuery: tenantPolicyResponse.customPromqlQuery,
-          customComparison: tenantPolicyResponse.customComparison,
-          customThreshold: tenantPolicyResponse.customThreshold,
-          enabled: tenantPolicyResponse.enabled,
-        });
+        setTenantPolicy(alertPolicyToInput(tenantPolicyResponse));
 
         setNotificationSettings({
           telegramEnabled: notificationResponse.telegramEnabled,
@@ -290,6 +306,7 @@ export default function AlertsPage() {
         });
 
         setTenantServers(tenantServerRows);
+        setSelectedServerId(tenantServerRows[0]?.id ?? "");
         setSilences(silenceRows);
       } catch (loadError) {
         const message = loadError instanceof Error ? loadError.message : "Unable to load tenant alert settings.";
@@ -301,6 +318,36 @@ export default function AlertsPage() {
 
     void loadTenantSettings();
   }, [selectedTenantId, silenceScope, silenceActiveOnly]);
+
+  useEffect(() => {
+    if (!selectedTenantId || !selectedServerId) {
+      setServerPolicy(EMPTY_POLICY);
+      return;
+    }
+
+    const selectedServerExists = tenantServers.some((server) => server.id === selectedServerId);
+    if (!selectedServerExists) {
+      setServerPolicy(EMPTY_POLICY);
+      return;
+    }
+
+    const loadServerPolicy = async () => {
+      setIsLoadingServerPolicy(true);
+      try {
+        const accessToken = "";
+        const serverPolicyResponse = await getServerAlertPolicy(accessToken, selectedTenantId, selectedServerId);
+        setServerPolicy(alertPolicyToInput(serverPolicyResponse));
+      } catch (loadError) {
+        const message = loadError instanceof Error ? loadError.message : "Unable to load server alert policy.";
+        setError(message);
+        setServerPolicy(EMPTY_POLICY);
+      } finally {
+        setIsLoadingServerPolicy(false);
+      }
+    };
+
+    void loadServerPolicy();
+  }, [selectedServerId, selectedTenantId, tenantServers]);
 
   const handleSaveGlobalPolicy = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -338,6 +385,28 @@ export default function AlertsPage() {
       setError(message);
     } finally {
       setIsSavingTenantPolicy(false);
+    }
+  };
+
+  const handleSaveServerPolicy = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setServerMessage(null);
+    setError(null);
+
+    if (!selectedTenantId || !selectedServerId) {
+      setError("Select a tenant and server first.");
+      return;
+    }
+
+    setIsSavingServerPolicy(true);
+    try {
+      await saveServerAlertPolicy("", selectedTenantId, selectedServerId, serverPolicy);
+      setServerMessage("Server alert policy saved.");
+    } catch (saveError) {
+      const message = saveError instanceof Error ? saveError.message : "Unable to save server policy.";
+      setError(message);
+    } finally {
+      setIsSavingServerPolicy(false);
     }
   };
 
@@ -504,7 +573,7 @@ export default function AlertsPage() {
           tenant={{
             label: userRole === "admin" ? "Alert Routing" : "Tenant Alerting",
             name: userRole === "admin" ? selectedTenant?.name ?? "Choose tenant" : "Current tenant",
-            serversCount: 0,
+            serversCount: tenantServers.length,
             onboardingRunning: 0,
             detailLines: [
               isAdmin ? "Global + tenant scope" : "Tenant scope",
@@ -533,7 +602,10 @@ export default function AlertsPage() {
                   <span className="app-text-soft">Tenant</span>
                   <select
                     value={selectedTenantId}
-                    onChange={(event) => setSelectedTenantId(event.target.value)}
+                    onChange={(event) => {
+                      setSelectedTenantId(event.target.value);
+                      setSelectedServerId("");
+                    }}
                     className="app-input h-11 min-w-[220px] rounded-xl px-4 text-[14px]"
                   >
                     {tenants.map((tenant) => (
@@ -544,6 +616,34 @@ export default function AlertsPage() {
                   </select>
                 </label>
               </div>
+            </section>
+          ) : null}
+
+          {canManageSettings ? (
+            <section className="app-card mt-8 rounded-[18px] p-6">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <h2 className="text-[22px] font-semibold text-[var(--app-text)]">Server Scope</h2>
+                <label className="flex items-center gap-3 text-sm">
+                  <span className="app-text-soft">Server</span>
+                  <select
+                    value={selectedServerId}
+                    onChange={(event) => setSelectedServerId(event.target.value)}
+                    disabled={!tenantServers.length}
+                    className="app-input h-11 min-w-[220px] rounded-xl px-4 text-[14px]"
+                  >
+                    <option value="">{tenantServers.length ? "Select a server" : "No servers available"}</option>
+                    {tenantServers.map((server) => (
+                      <option key={server.id} value={server.id}>
+                        {server.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <p className="app-text-soft mt-4 text-[13px]">
+                Choose a tenant first, then select a server to edit its server-level alert policy.
+              </p>
             </section>
           ) : null}
 
@@ -983,6 +1083,191 @@ export default function AlertsPage() {
               className="app-button-primary mt-6 inline-flex h-11 items-center justify-center rounded-xl px-6 text-sm font-medium disabled:opacity-60"
             >
               {isSavingTenantPolicy ? "Saving..." : "Save Tenant Policy"}
+            </button>
+          </form>
+
+          <form onSubmit={handleSaveServerPolicy} className="app-card mt-8 rounded-[18px] p-6">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <h2 className="text-[22px] font-semibold text-[var(--app-text)]">Server Alert Policy</h2>
+                <p className="app-text-soft mt-2 text-[14px]">
+                  Server-level thresholds override tenant and global defaults for the selected server only.
+                </p>
+              </div>
+
+              <div className="rounded-full bg-[#1b2630] px-4 py-2 text-xs text-[#a8b3c2]">
+                {selectedServer ? selectedServer.name : isLoadingServerPolicy ? "Loading server policy..." : "No server selected"}
+              </div>
+            </div>
+
+            <div className="mt-6 grid gap-5 md:grid-cols-3">
+              <label className="block">
+                <span className="app-text-soft text-[13px]">CPU %</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={valueOrEmpty(serverPolicy.cpuUsagePercent)}
+                  onChange={(event) => setServerPolicy((current) => ({
+                    ...current,
+                    cpuUsagePercent: toNullableNumber(event.target.value),
+                  }))}
+                  disabled={!canManageSettings || !selectedServerId}
+                  className="app-input mt-2 h-11 w-full rounded-xl px-4 disabled:opacity-70"
+                />
+              </label>
+              <label className="block">
+                <span className="app-text-soft text-[13px]">Memory %</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={valueOrEmpty(serverPolicy.memoryUsagePercent)}
+                  onChange={(event) => setServerPolicy((current) => ({
+                    ...current,
+                    memoryUsagePercent: toNullableNumber(event.target.value),
+                  }))}
+                  disabled={!canManageSettings || !selectedServerId}
+                  className="app-input mt-2 h-11 w-full rounded-xl px-4 disabled:opacity-70"
+                />
+              </label>
+              <label className="block">
+                <span className="app-text-soft text-[13px]">Disk Free %</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={valueOrEmpty(serverPolicy.diskFreePercent)}
+                  onChange={(event) => setServerPolicy((current) => ({
+                    ...current,
+                    diskFreePercent: toNullableNumber(event.target.value),
+                  }))}
+                  disabled={!canManageSettings || !selectedServerId}
+                  className="app-input mt-2 h-11 w-full rounded-xl px-4 disabled:opacity-70"
+                />
+              </label>
+            </div>
+
+            <div className="mt-5 grid gap-5 md:grid-cols-3">
+              <label className="block">
+                <span className="app-text-soft text-[13px]">Server Down (min)</span>
+                <input
+                  type="number"
+                  min={1}
+                  value={valueOrEmpty(serverPolicy.serverDownForMinutes)}
+                  onChange={(event) => setServerPolicy((current) => ({
+                    ...current,
+                    serverDownForMinutes: toNullableNumber(event.target.value),
+                  }))}
+                  disabled={!canManageSettings || !selectedServerId}
+                  className="app-input mt-2 h-11 w-full rounded-xl px-4 disabled:opacity-70"
+                />
+              </label>
+              <label className="block">
+                <span className="app-text-soft text-[13px]">Container Down (min)</span>
+                <input
+                  type="number"
+                  min={1}
+                  value={valueOrEmpty(serverPolicy.containerDownForMinutes)}
+                  onChange={(event) => setServerPolicy((current) => ({
+                    ...current,
+                    containerDownForMinutes: toNullableNumber(event.target.value),
+                  }))}
+                  disabled={!canManageSettings || !selectedServerId}
+                  className="app-input mt-2 h-11 w-full rounded-xl px-4 disabled:opacity-70"
+                />
+              </label>
+              <label className="block">
+                <span className="app-text-soft text-[13px]">Restart Count</span>
+                <input
+                  type="number"
+                  min={1}
+                  value={valueOrEmpty(serverPolicy.containerRestartCount)}
+                  onChange={(event) => setServerPolicy((current) => ({
+                    ...current,
+                    containerRestartCount: toNullableNumber(event.target.value),
+                  }))}
+                  disabled={!canManageSettings || !selectedServerId}
+                  className="app-input mt-2 h-11 w-full rounded-xl px-4 disabled:opacity-70"
+                />
+              </label>
+            </div>
+
+            <div className="mt-6">
+              <h3 className="text-[16px] font-semibold text-[var(--app-text)]">Advanced Custom Alert (Optional)</h3>
+              <p className="app-text-soft mt-1 text-[13px] leading-[19px]">
+                Use this only if you need app-specific alert logic on this server. Leave these fields empty to inherit from tenant/global settings.
+              </p>
+            </div>
+
+            <div className="mt-5 grid gap-5 md:grid-cols-[1fr_220px_220px]">
+              <label className="block">
+                <span className="app-text-soft text-[13px]">Custom Metric Name</span>
+                <input
+                  type="text"
+                  value={serverPolicy.customMetricName ?? ""}
+                  onChange={(event) => setServerPolicy((current) => ({
+                    ...current,
+                    customMetricName: textOrNull(event.target.value),
+                  }))}
+                  disabled={!canManageSettings || !selectedServerId}
+                  className="app-input mt-2 h-11 w-full rounded-xl px-4 disabled:opacity-70"
+                />
+              </label>
+
+              <label className="block">
+                <span className="app-text-soft text-[13px]">Comparison</span>
+                <select
+                  value={serverPolicy.customComparison ?? ""}
+                  onChange={(event) => setServerPolicy((current) => ({
+                    ...current,
+                    customComparison: (event.target.value || null) as UpsertAlertPolicyInput["customComparison"],
+                  }))}
+                  disabled={!canManageSettings || !selectedServerId}
+                  className="app-input mt-2 h-11 w-full rounded-xl px-4 disabled:opacity-70"
+                >
+                  <option value="">None</option>
+                  <option value=">">&gt;</option>
+                  <option value=">=">&gt;=</option>
+                  <option value="<">&lt;</option>
+                  <option value="<=">&lt;=</option>
+                </select>
+              </label>
+
+              <label className="block">
+                <span className="app-text-soft text-[13px]">Threshold</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={valueOrEmpty(serverPolicy.customThreshold)}
+                  onChange={(event) => setServerPolicy((current) => ({
+                    ...current,
+                    customThreshold: toNullableDecimal(event.target.value),
+                  }))}
+                  disabled={!canManageSettings || !selectedServerId}
+                  className="app-input mt-2 h-11 w-full rounded-xl px-4 disabled:opacity-70"
+                />
+              </label>
+            </div>
+
+            <label className="mt-6 flex items-center gap-3 text-[14px]">
+              <input
+                type="checkbox"
+                checked={serverPolicy.enabled}
+                onChange={(event) => setServerPolicy((current) => ({ ...current, enabled: event.target.checked }))}
+                disabled={!canManageSettings || !selectedServerId}
+              />
+              <span className="app-text-soft">Server policy enabled</span>
+            </label>
+
+            {serverMessage ? <p className="mt-4 text-sm text-[#7bd7a6]">{serverMessage}</p> : null}
+
+            <button
+              type="submit"
+              disabled={!canManageSettings || !selectedServerId || isSavingServerPolicy || isLoadingServerPolicy}
+              className="app-button-primary mt-6 inline-flex h-11 items-center justify-center rounded-xl px-6 text-sm font-medium disabled:opacity-60"
+            >
+              {isSavingServerPolicy ? "Saving..." : "Save Server Policy"}
             </button>
           </form>
 
