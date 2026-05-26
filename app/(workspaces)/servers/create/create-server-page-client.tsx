@@ -6,7 +6,12 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import Sidebar from "@/components/layouts/sidebar";
 import { getCurrentUser, type UserRole } from "@/services/authService";
 import { showToast } from "@/components/ui/toast";
-import { createServer, listTenants, type TenantResponse } from "@/services/workspaceService";
+import {
+  createServer,
+  listTenants,
+  saveManagedServerMetricsEndpoints,
+  type TenantResponse,
+} from "@/services/workspaceService";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +61,15 @@ function Toggle({
   );
 }
 
+function parsePortInput(value: string, label: string): number {
+  const parsed = Number(value.trim());
+  if (!Number.isInteger(parsed) || parsed < 1 || parsed > 65535) {
+    throw new Error(`${label} must be an integer between 1 and 65535.`);
+  }
+
+  return parsed;
+}
+
 export default function CreateServerPage() {
   const searchParams = useSearchParams();
   const tenantIdFromQuery = searchParams.get("tenantId") ?? "";
@@ -69,6 +83,8 @@ export default function CreateServerPage() {
   const [instance, setInstance] = useState("");
   const [environment, setEnvironment] = useState("development");
   const [dockerEnabled, setDockerEnabled] = useState(true);
+  const [nodeExporterPort, setNodeExporterPort] = useState("9100");
+  const [cadvisorPort, setCadvisorPort] = useState("8081");
   const [ansibleHost, setAnsibleHost] = useState("");
   const [ansibleUser, setAnsibleUser] = useState("root");
   const [ansibleBecome, setAnsibleBecome] = useState(false);
@@ -169,6 +185,17 @@ export default function CreateServerPage() {
       return;
     }
 
+    let normalizedNodeExporterPort = 0;
+    let normalizedCadvisorPort = 0;
+    try {
+      normalizedNodeExporterPort = parsePortInput(nodeExporterPort, "Node exporter port");
+      normalizedCadvisorPort = parsePortInput(cadvisorPort, "cAdvisor port");
+    } catch (portError) {
+      const message = portError instanceof Error ? portError.message : "Invalid monitoring port.";
+      showToast(message, "error");
+      return;
+    }
+
     if (userRole === "owner") {
       const normalizedBillingNote = billingNote.trim();
       const normalizedBillingAmount = billingAmount.trim();
@@ -208,7 +235,7 @@ export default function CreateServerPage() {
     setIsSubmitting(true);
 
     try {
-      await createServer("", selectedTenantId, {
+      const createdServer = await createServer("", selectedTenantId, {
         name: name.trim(),
         ipAddress: ipAddress.trim(),
         instance: instance.trim(),
@@ -228,6 +255,20 @@ export default function CreateServerPage() {
       });
 
       localStorage.setItem(ACTIVE_TENANT_STORAGE_KEY, selectedTenantId);
+
+      try {
+        await saveManagedServerMetricsEndpoints("", selectedTenantId, createdServer, {
+          nodeExporterPort: normalizedNodeExporterPort,
+          cadvisorPort: normalizedCadvisorPort,
+        });
+      } catch {
+        showToast(
+          `Server ${name.trim()} was created, but monitoring ports could not be saved. Open the server edit page and retry.`,
+          "error",
+        );
+        return;
+      }
+
       showToast(
         `Server ${name.trim()} created${selectedTenant ? ` for ${selectedTenant.name}` : ""}. You can return to the workspace and trigger onboarding next.`,
         "success",
@@ -237,6 +278,8 @@ export default function CreateServerPage() {
       setInstance("");
       setEnvironment("development");
       setDockerEnabled(true);
+      setNodeExporterPort("9100");
+      setCadvisorPort("8081");
       setAnsibleHost("");
       setAnsibleUser("root");
       setAnsibleBecome(false);
@@ -460,6 +503,42 @@ export default function CreateServerPage() {
                     </div>
                     <Toggle checked={dockerEnabled} onToggle={() => setDockerEnabled((current) => !current)} />
                   </div>
+                </div>
+
+                <div className="mt-5 grid gap-5 xl:grid-cols-2">
+                  <label className="block">
+                    <span className="text-[13px] text-[#8c9eba]">Node exporter port</span>
+                    <input
+                      type="number"
+                      min="1"
+                      max="65535"
+                      step="1"
+                      value={nodeExporterPort}
+                      onChange={(event) => setNodeExporterPort(event.target.value)}
+                      placeholder="9100"
+                      className="mt-3 h-[54px] w-full rounded-[14px] border border-[#262e3d] bg-[#171c26] px-5 text-[14px] text-[#f2f5fa] outline-none placeholder:text-[#b8c4d6] focus:border-[#5cb7ff]"
+                    />
+                    <p className="mt-2 text-[13px] leading-[18px] text-[#8c9eba]">
+                      Port used by Prometheus to scrape node exporter for this server.
+                    </p>
+                  </label>
+
+                  <label className="block">
+                    <span className="text-[13px] text-[#8c9eba]">cAdvisor port</span>
+                    <input
+                      type="number"
+                      min="1"
+                      max="65535"
+                      step="1"
+                      value={cadvisorPort}
+                      onChange={(event) => setCadvisorPort(event.target.value)}
+                      placeholder="8081"
+                      className="mt-3 h-[54px] w-full rounded-[14px] border border-[#262e3d] bg-[#171c26] px-5 text-[14px] text-[#f2f5fa] outline-none placeholder:text-[#b8c4d6] focus:border-[#5cb7ff]"
+                    />
+                    <p className="mt-2 text-[13px] leading-[18px] text-[#8c9eba]">
+                      Stored per server. When Docker is off, the endpoint stays disabled until Docker is enabled.
+                    </p>
+                  </label>
                 </div>
               </div>
 

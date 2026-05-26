@@ -9,6 +9,8 @@ import { showToast } from "@/components/ui/toast";
 import {
   getServer,
   listTenants,
+  listServerMetricsEndpoints,
+  saveManagedServerMetricsEndpoints,
   updateServer,
   type TenantResponse,
 } from "@/services/workspaceService";
@@ -51,6 +53,15 @@ function Toggle({
   );
 }
 
+function parsePortInput(value: string, label: string): number {
+  const parsed = Number(value.trim());
+  if (!Number.isInteger(parsed) || parsed < 1 || parsed > 65535) {
+    throw new Error(`${label} must be an integer between 1 and 65535.`);
+  }
+
+  return parsed;
+}
+
 export default function EditServerPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
@@ -67,6 +78,8 @@ export default function EditServerPage() {
   const [instance, setInstance] = useState("");
   const [environment, setEnvironment] = useState("development");
   const [dockerEnabled, setDockerEnabled] = useState(true);
+  const [nodeExporterPort, setNodeExporterPort] = useState("9100");
+  const [cadvisorPort, setCadvisorPort] = useState("8081");
   const [ansibleHost, setAnsibleHost] = useState("");
   const [ansibleUser, setAnsibleUser] = useState("root");
   const [ansibleBecome, setAnsibleBecome] = useState(false);
@@ -110,7 +123,11 @@ export default function EditServerPage() {
         }
 
         setRequestTenantId(resolvedTenantId);
-        const server = await getServer(accessToken, resolvedTenantId, serverId);
+        const [server, endpointRows] = await Promise.all([
+          getServer(accessToken, resolvedTenantId, serverId),
+          listServerMetricsEndpoints(accessToken, resolvedTenantId, serverId).catch(() => []),
+        ]);
+        const endpointByType = new Map(endpointRows.map((endpoint) => [endpoint.endpointType, endpoint]));
 
         setSelectedTenantId(server.tenantId);
         setName(server.name);
@@ -118,6 +135,8 @@ export default function EditServerPage() {
         setInstance(server.instance);
         setEnvironment(server.environment);
         setDockerEnabled(server.dockerEnabled);
+        setNodeExporterPort(String(endpointByType.get("node_exporter")?.port ?? 9100));
+        setCadvisorPort(String(endpointByType.get("cadvisor")?.port ?? 8081));
         setAnsibleHost(server.ansibleHost);
         setAnsibleUser(server.ansibleUser);
         setAnsibleBecome(server.ansibleBecome);
@@ -142,6 +161,17 @@ export default function EditServerPage() {
 
     if (!selectedTenantId) {
       showToast("Tenant selection is required.", "error");
+      return;
+    }
+
+    let normalizedNodeExporterPort = 0;
+    let normalizedCadvisorPort = 0;
+    try {
+      normalizedNodeExporterPort = parsePortInput(nodeExporterPort, "Node exporter port");
+      normalizedCadvisorPort = parsePortInput(cadvisorPort, "cAdvisor port");
+    } catch (portError) {
+      const message = portError instanceof Error ? portError.message : "Invalid monitoring port.";
+      showToast(message, "error");
       return;
     }
 
@@ -203,6 +233,20 @@ export default function EditServerPage() {
 
       setRequestTenantId(updatedServer.tenantId);
       setSelectedTenantId(updatedServer.tenantId);
+
+      try {
+        await saveManagedServerMetricsEndpoints("", updatedServer.tenantId, updatedServer, {
+          nodeExporterPort: normalizedNodeExporterPort,
+          cadvisorPort: normalizedCadvisorPort,
+        });
+      } catch {
+        showToast(
+          `Server ${name.trim()} was updated, but monitoring ports could not be saved. Open the server edit page and retry.`,
+          "error",
+        );
+        return;
+      }
+
       const successMsg =
         updatedServer.tenantId === requestTenantId
           ? `Server ${name.trim()} updated successfully.`
@@ -353,6 +397,40 @@ export default function EditServerPage() {
                 </div>
                 <Toggle checked={dockerEnabled} onToggle={() => setDockerEnabled((current) => !current)} />
               </div>
+            </div>
+
+            <div className="mt-5 grid gap-5 xl:grid-cols-2">
+              <label className="block">
+                <span className="text-[13px] text-[#8c9eba]">Node exporter port</span>
+                <input
+                  type="number"
+                  min="1"
+                  max="65535"
+                  step="1"
+                  value={nodeExporterPort}
+                  onChange={(event) => setNodeExporterPort(event.target.value)}
+                  className="mt-3 h-[54px] w-full rounded-[14px] border border-[#262e3d] bg-[#171c26] px-5 text-[14px] text-[#f2f5fa] outline-none focus:border-[#5cb7ff]"
+                />
+                <p className="mt-2 text-[13px] leading-[18px] text-[#8c9eba]">
+                  Port used by Prometheus to scrape node exporter for this server.
+                </p>
+              </label>
+
+              <label className="block">
+                <span className="text-[13px] text-[#8c9eba]">cAdvisor port</span>
+                <input
+                  type="number"
+                  min="1"
+                  max="65535"
+                  step="1"
+                  value={cadvisorPort}
+                  onChange={(event) => setCadvisorPort(event.target.value)}
+                  className="mt-3 h-[54px] w-full rounded-[14px] border border-[#262e3d] bg-[#171c26] px-5 text-[14px] text-[#f2f5fa] outline-none focus:border-[#5cb7ff]"
+                />
+                <p className="mt-2 text-[13px] leading-[18px] text-[#8c9eba]">
+                  Stored per server and kept even if Docker is temporarily disabled.
+                </p>
+              </label>
             </div>
 
             <div className="mt-8 grid gap-5 xl:grid-cols-[1fr_1fr_1.08fr]">

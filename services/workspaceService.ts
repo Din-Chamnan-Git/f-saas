@@ -27,6 +27,19 @@ export type ServerResponse = {
   billingDueDay: number | null;
 };
 
+export type ServerMetricsEndpointResponse = {
+  id: string;
+  serverId: string;
+  endpointType: string;
+  scheme: string;
+  host: string;
+  port: number;
+  path: string;
+  isEnabled: boolean;
+  lastStatus: string;
+  lastCheckedAt: string | null;
+};
+
 export type OnboardingJobResponse = {
   jobId: string;
   tenantId: string;
@@ -153,6 +166,11 @@ export type UpdateServerTransferInput = UpdateServerInput & {
   tenantId?: string;
 };
 
+export type ManagedServerMetricsPorts = {
+  nodeExporterPort: number;
+  cadvisorPort: number;
+};
+
 export type CreateTenantOwnerInput = {
   tenantId: string;
   email: string;
@@ -237,6 +255,17 @@ function buildAuthHeaders(accessToken: string) {
     Authorization: `Bearer ${accessToken}`,
   };
 }
+
+type ManagedServerMetricsEndpointType = "node_exporter" | "cadvisor";
+
+type ManagedServerMetricsEndpointInput = {
+  endpointType: ManagedServerMetricsEndpointType;
+  scheme: "http" | "https";
+  host: string;
+  port: number;
+  path: string;
+  isEnabled: boolean;
+};
 
 function toOnboardingStatus(status?: string): ServerOnboardingStatus {
   const normalizedStatus = status?.toUpperCase();
@@ -905,6 +934,75 @@ export async function updateServer(
   return apiPut<ServerResponse, UpdateServerTransferInput>(`/api/v1/tenants/${tenantId}/servers/${serverId}`, payload, {
     headers: buildAuthHeaders(accessToken),
   });
+}
+
+export async function listServerMetricsEndpoints(
+  accessToken: string,
+  tenantId: string,
+  serverId: string,
+): Promise<ServerMetricsEndpointResponse[]> {
+  return apiGet<ServerMetricsEndpointResponse[]>(
+    `/api/v1/tenants/${tenantId}/servers/${serverId}/metrics-endpoints`,
+    {
+      headers: buildAuthHeaders(accessToken),
+    },
+  );
+}
+
+async function saveServerMetricsEndpoint(
+  accessToken: string,
+  tenantId: string,
+  serverId: string,
+  endpointId: string | null,
+  payload: ManagedServerMetricsEndpointInput,
+): Promise<ServerMetricsEndpointResponse> {
+  if (endpointId) {
+    return apiPut<ServerMetricsEndpointResponse, ManagedServerMetricsEndpointInput>(
+      `/api/v1/tenants/${tenantId}/servers/${serverId}/metrics-endpoints/${endpointId}`,
+      payload,
+      {
+        headers: buildAuthHeaders(accessToken),
+      },
+    );
+  }
+
+  return apiPost<ServerMetricsEndpointResponse, ManagedServerMetricsEndpointInput>(
+    `/api/v1/tenants/${tenantId}/servers/${serverId}/metrics-endpoints`,
+    payload,
+    {
+      headers: buildAuthHeaders(accessToken),
+    },
+  );
+}
+
+export async function saveManagedServerMetricsEndpoints(
+  accessToken: string,
+  tenantId: string,
+  server: Pick<ServerResponse, "id" | "ipAddress" | "dockerEnabled">,
+  ports: ManagedServerMetricsPorts,
+): Promise<ServerMetricsEndpointResponse[]> {
+  const endpoints = await listServerMetricsEndpoints(accessToken, tenantId, server.id).catch(() => []);
+  const endpointByType = new Map(endpoints.map((endpoint) => [endpoint.endpointType, endpoint]));
+
+  const nodeExporterEndpoint = await saveServerMetricsEndpoint(accessToken, tenantId, server.id, endpointByType.get("node_exporter")?.id ?? null, {
+    endpointType: "node_exporter",
+    scheme: "http",
+    host: server.ipAddress,
+    port: ports.nodeExporterPort,
+    path: "/metrics",
+    isEnabled: true,
+  });
+
+  const cadvisorEndpoint = await saveServerMetricsEndpoint(accessToken, tenantId, server.id, endpointByType.get("cadvisor")?.id ?? null, {
+    endpointType: "cadvisor",
+    scheme: "http",
+    host: server.ipAddress,
+    port: ports.cadvisorPort,
+    path: "/metrics",
+    isEnabled: server.dockerEnabled,
+  });
+
+  return [nodeExporterEndpoint, cadvisorEndpoint];
 }
 
 export async function createTenantOwner(
