@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Sidebar from "@/components/layouts/sidebar";
+import { classifyIp } from "@/components/servers/monitoring-connectivity-check";
 import { getCurrentUser, type UserRole } from "@/services/authService";
 import { showToast } from "@/components/ui/toast";
 import {
@@ -460,6 +461,12 @@ export default function CreateServerPage() {
                       placeholder="46.62.230.113"
                       className="mt-3 h-[54px] w-full rounded-[14px] border border-[#262e3d] bg-[#171c26] px-5 text-[14px] text-[#f2f5fa] outline-none placeholder:text-[#b8c4d6] focus:border-[#5cb7ff]"
                     />
+                    {["private", "loopback", "link-local"].includes(classifyIp(ipAddress)) ? (
+                      <p className="mt-2 text-[13px] leading-[18px] text-[#f4c87a]">
+                        This looks like a private/internal IP. Prometheus must reach it over the
+                        network, so use the public IP or configure NAT/VPN.
+                      </p>
+                    ) : null}
                   </label>
 
                   <label className="block">

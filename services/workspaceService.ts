@@ -975,6 +975,20 @@ async function saveServerMetricsEndpoint(
   );
 }
 
+export async function checkAllServerMetricsEndpoints(
+  accessToken: string,
+  tenantId: string,
+  serverId: string,
+): Promise<ServerMetricsEndpointResponse[]> {
+  return apiPost<ServerMetricsEndpointResponse[], Record<string, never>>(
+    `/api/v1/tenants/${tenantId}/servers/${serverId}/metrics-endpoints/check-all`,
+    {},
+    {
+      headers: buildAuthHeaders(accessToken),
+    },
+  );
+}
+
 export async function saveManagedServerMetricsEndpoints(
   accessToken: string,
   tenantId: string,

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Sidebar from "@/components/layouts/sidebar";
+import MonitoringConnectivityCheck, { classifyIp } from "@/components/servers/monitoring-connectivity-check";
 import { getCurrentUser, type UserRole } from "@/services/authService";
 import { showToast } from "@/components/ui/toast";
 import {
@@ -90,11 +91,17 @@ export default function EditServerPage() {
   const [billingDueDay, setBillingDueDay] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [savedSnapshot, setSavedSnapshot] = useState({ ipAddress: "", nodeExporterPort: "", cadvisorPort: "" });
 
   const selectedTenant = useMemo(
     () => tenants.find((tenant) => tenant.id === selectedTenantId) ?? null,
     [selectedTenantId, tenants],
   );
+
+  const hasConnectivityChanges =
+    savedSnapshot.ipAddress !== ipAddress.trim() ||
+    savedSnapshot.nodeExporterPort !== nodeExporterPort.trim() ||
+    savedSnapshot.cadvisorPort !== cadvisorPort.trim();
 
   useEffect(() => {
     const loadPage = async () => {
@@ -135,8 +142,15 @@ export default function EditServerPage() {
         setInstance(server.instance);
         setEnvironment(server.environment);
         setDockerEnabled(server.dockerEnabled);
-        setNodeExporterPort(String(endpointByType.get("node_exporter")?.port ?? 9100));
-        setCadvisorPort(String(endpointByType.get("cadvisor")?.port ?? 8081));
+        const loadedNodeExporterPort = String(endpointByType.get("node_exporter")?.port ?? 9100);
+        const loadedCadvisorPort = String(endpointByType.get("cadvisor")?.port ?? 8081);
+        setNodeExporterPort(loadedNodeExporterPort);
+        setCadvisorPort(loadedCadvisorPort);
+        setSavedSnapshot({
+          ipAddress: server.ipAddress.trim(),
+          nodeExporterPort: loadedNodeExporterPort.trim(),
+          cadvisorPort: loadedCadvisorPort.trim(),
+        });
         setAnsibleHost(server.ansibleHost);
         setAnsibleUser(server.ansibleUser);
         setAnsibleBecome(server.ansibleBecome);
@@ -246,6 +260,12 @@ export default function EditServerPage() {
         );
         return;
       }
+
+      setSavedSnapshot({
+        ipAddress: updatedServer.ipAddress.trim(),
+        nodeExporterPort: String(normalizedNodeExporterPort),
+        cadvisorPort: String(normalizedCadvisorPort),
+      });
 
       const successMsg =
         updatedServer.tenantId === requestTenantId
@@ -361,6 +381,12 @@ export default function EditServerPage() {
                   onChange={(event) => setIpAddress(event.target.value)}
                   className="mt-3 h-[54px] w-full rounded-[14px] border border-[#262e3d] bg-[#171c26] px-5 text-[14px] text-[#f2f5fa] outline-none focus:border-[#5cb7ff]"
                 />
+                {["private", "loopback", "link-local"].includes(classifyIp(ipAddress)) ? (
+                  <p className="mt-2 text-[13px] leading-[18px] text-[#f4c87a]">
+                    This looks like a private/internal IP. Prometheus must reach it over the network,
+                    so use the public IP or configure NAT/VPN.
+                  </p>
+                ) : null}
               </label>
 
               <label className="block">
@@ -542,6 +568,15 @@ export default function EditServerPage() {
               </div>
             </div>
           </form>
+
+          {selectedTenantId && serverId ? (
+            <MonitoringConnectivityCheck
+              tenantId={requestTenantId || selectedTenantId}
+              serverId={serverId}
+              ipAddress={ipAddress}
+              hasUnsavedChanges={hasConnectivityChanges}
+            />
+          ) : null}
         </section>
       </main>
     </div>
