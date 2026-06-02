@@ -4,14 +4,18 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Sidebar from "@/components/layouts/sidebar";
+import ManagedContainersTable from "@/components/ui/managed-containers-table";
 import { getCurrentUser, type UserRole } from "@/services/authService";
 import {
   getServerMetricSeries,
   getServerOverview,
   getTopContainers,
+  listManagedContainers,
+  restartManagedContainer,
   listTenantServers,
   listTenants,
   type MetricSeriesResponse,
+  type ManagedContainerResponse,
   type ServerOverviewResponse,
   type ServerResponse,
   type TenantResponse,
@@ -816,6 +820,9 @@ export default function MetricsPage() {
   });
   const [topCpu, setTopCpu] = useState<TopContainerMetricResponse | null>(null);
   const [topMemory, setTopMemory] = useState<TopContainerMetricResponse | null>(null);
+  const [managedContainers, setManagedContainers] = useState<ManagedContainerResponse[]>([]);
+  const [pendingContainerId, setPendingContainerId] = useState<string | null>(null);
+  const [containerNotice, setContainerNotice] = useState<{ tone: "success" | "error"; message: string } | null>(null);
   const [isLoadingContext, setIsLoadingContext] = useState(true);
   const [isLoadingMetrics, setIsLoadingMetrics] = useState(false);
   const [isRefreshFxActive, setIsRefreshFxActive] = useState(false);
@@ -1088,6 +1095,7 @@ export default function MetricsPage() {
       });
       setTopCpu(null);
       setTopMemory(null);
+      setManagedContainers([]);
       return;
     }
 
@@ -1103,7 +1111,7 @@ export default function MetricsPage() {
 
     try {
       const accessToken = "";
-      const [nextOverview, cpu, memory, disk, network, nextTopCpu, nextTopMemory] = await Promise.all([
+      const [nextOverview, cpu, memory, disk, network, nextTopCpu, nextTopMemory, nextManagedContainers] = await Promise.all([
         getServerOverview(accessToken, selectedTenantId, selectedServerId),
         getServerMetricSeries(accessToken, selectedTenantId, selectedServerId, "cpu", selectedRange),
         getServerMetricSeries(accessToken, selectedTenantId, selectedServerId, "memory", selectedRange),
@@ -1111,6 +1119,9 @@ export default function MetricsPage() {
         getServerMetricSeries(accessToken, selectedTenantId, selectedServerId, "network", selectedRange),
         getTopContainers(accessToken, selectedTenantId, selectedServerId, "cpu"),
         getTopContainers(accessToken, selectedTenantId, selectedServerId, "memory"),
+        selectedServer?.dockerEnabled
+          ? listManagedContainers(accessToken, selectedTenantId, selectedServerId).catch(() => [])
+          : Promise.resolve([] as ManagedContainerResponse[]),
       ]);
 
       setOverview(nextOverview);
@@ -1122,6 +1133,7 @@ export default function MetricsPage() {
       });
       setTopCpu(nextTopCpu);
       setTopMemory(nextTopMemory);
+      setManagedContainers(nextManagedContainers);
       setLastRefreshedAt(new Date());
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "Unable to load server metrics.");
@@ -1142,7 +1154,36 @@ export default function MetricsPage() {
         }, remainingMs);
       }
     }
-  }, [selectedRange, selectedServerId, selectedTenantId]);
+  }, [selectedRange, selectedServer?.dockerEnabled, selectedServerId, selectedTenantId]);
+
+  const handleRestartContainer = useCallback(
+    async (containerId: string) => {
+      if (!selectedTenantId || !selectedServerId || !selectedServer?.dockerEnabled || userRole !== "admin") {
+        return;
+      }
+
+      setPendingContainerId(containerId);
+      setContainerNotice(null);
+
+      try {
+        const accessToken = "";
+        await restartManagedContainer(accessToken, selectedTenantId, selectedServerId, containerId);
+        setContainerNotice({
+          tone: "success",
+          message: "Container restart requested successfully.",
+        });
+        await loadMetrics();
+      } catch (restartError) {
+        setContainerNotice({
+          tone: "error",
+          message: restartError instanceof Error ? restartError.message : "Unable to restart the container.",
+        });
+      } finally {
+        setPendingContainerId(null);
+      }
+    },
+    [loadMetrics, selectedServer?.dockerEnabled, selectedServerId, selectedTenantId, userRole],
+  );
 
   useEffect(() => {
     void loadMetrics();
@@ -1406,6 +1447,16 @@ export default function MetricsPage() {
                   memoryTotalBytes={overview?.memoryTotalBytes}
                 />
               </div>
+
+              {selectedServer.dockerEnabled ? (
+                <ManagedContainersTable
+                  rows={managedContainers}
+                  canRestart={userRole === "admin"}
+                  pendingContainerId={pendingContainerId}
+                  onRestart={handleRestartContainer}
+                  notice={containerNotice}
+                />
+              ) : null}
             </>
           ) : null}
         </section>

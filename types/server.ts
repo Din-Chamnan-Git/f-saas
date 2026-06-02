@@ -2,6 +2,7 @@ export type ServerEnvironment = "development" | "production" | "staging";
 export type ServerOnboardingStatus = "success" | "running" | "failed";
 export type ServerAction = "Open" | "Verify";
 export type ServerUsageMetric = "cpu" | "memory" | "disk";
+export type ManagedContainerStatus = "up" | "down" | "unknown";
 
 export type ServerRow = {
   id?: string;
@@ -30,4 +31,19 @@ export type AdminFleetServerRow = {
   utilizationScore: number;
   worstMetric: ServerUsageMetric;
   status: string;
+};
+
+export type ManagedContainerRow = {
+  id: string;
+  tenantId: string;
+  serverId: string;
+  containerIdentifier: string;
+  containerName: string;
+  status: ManagedContainerStatus;
+  statusMessage: string | null;
+  restartable: boolean;
+  lastSeenAt: string | null;
+  lastRestartAt: string | null;
+  lastRestartStatus: string | null;
+  lastRestartMessage: string | null;
 };

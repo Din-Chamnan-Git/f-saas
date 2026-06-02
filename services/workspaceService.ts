@@ -1,6 +1,11 @@
 import { ApiError, apiGet, apiPost, apiPut } from "@/services/apiClient";
 import type { SummaryCard } from "@/types/dahboard";
-import type { AdminFleetServerRow, ServerOnboardingStatus, ServerRow } from "@/types/server";
+import type {
+  AdminFleetServerRow,
+  ManagedContainerRow,
+  ServerOnboardingStatus,
+  ServerRow,
+} from "@/types/server";
 
 export type TenantResponse = {
   id: string;
@@ -234,6 +239,8 @@ export type TopContainerMetricResponse = {
   metric: string;
   containers: TopContainerResponse[];
 };
+
+export type ManagedContainerResponse = ManagedContainerRow;
 
 export type LogEntryResponse = {
   timestamp: string;
@@ -1055,6 +1062,31 @@ export async function getTopContainers(
   return apiGet<TopContainerMetricResponse>(`/api/v1/tenants/${tenantId}/servers/${serverId}/containers/top/${metric}`, {
     headers: buildAuthHeaders(accessToken),
   });
+}
+
+export async function listManagedContainers(
+  accessToken: string,
+  tenantId: string,
+  serverId: string,
+): Promise<ManagedContainerResponse[]> {
+  return apiGet<ManagedContainerResponse[]>(`/api/v1/tenants/${tenantId}/servers/${serverId}/containers`, {
+    headers: buildAuthHeaders(accessToken),
+  });
+}
+
+export async function restartManagedContainer(
+  accessToken: string,
+  tenantId: string,
+  serverId: string,
+  containerId: string,
+): Promise<ManagedContainerResponse> {
+  return apiPost<ManagedContainerResponse, Record<string, never>>(
+    `/api/v1/tenants/${tenantId}/servers/${serverId}/containers/${containerId}/restart`,
+    {},
+    {
+      headers: buildAuthHeaders(accessToken),
+    },
+  );
 }
 
 export async function getServerLogs(
