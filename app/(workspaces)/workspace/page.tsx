@@ -88,11 +88,9 @@ function AdminActionLink({
 function AdminDashboardView({
   dashboard,
   error,
-  onRefresh,
 }: {
   dashboard: AdminDashboardData | null;
   error: string | null;
-  onRefresh: () => Promise<void>;
 }) {
   const summaryCards = dashboard?.summaryCards ?? [];
   const activityItems = dashboard?.activityItems ?? [];
@@ -113,41 +111,6 @@ function AdminDashboardView({
           <AdminSummaryCard key={card.title} title={card.title} value={card.value} hint={card.hint} />
         ))}
       </div>
-
-      <section className="app-card mt-6 rounded-[18px] p-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div>
-            <h2 className="text-[24px] font-semibold text-[var(--app-text)]">Quick Actions</h2>
-            <p className="app-text-soft mt-2 text-[14px] leading-[20px]">Open core admin pages directly.</p>
-          </div>
-          <div className="rounded-2xl border border-[#314153] bg-[#141b24] px-4 py-3 text-right">
-            <p className="text-[10px] tracking-[0.18em] text-[#6f819c]">PLATFORM SCOPE</p>
-            <p className="mt-2 text-xl text-[var(--app-text)]">{dashboard?.platformScope.name ?? "All tenants"}</p>
-            {(dashboard?.platformScope.detailLines ?? []).map((line) => (
-              <p key={line} className="mt-1 text-sm text-[#8ea0bb]">
-                {line}
-              </p>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-6 flex flex-wrap gap-3">
-          <AdminActionLink href="/tenants" label="Tenant Directory" tone="primary" />
-          <AdminActionLink href="/owners" label="Provision Owners" />
-          <AdminActionLink href="/servers" label="Inspect Fleet" />
-          <AdminActionLink href="/jobs" label="Review Jobs" />
-          <AdminActionLink href="/metrics" label="Platform Metrics" />
-          <button
-            type="button"
-            onClick={() => {
-              void onRefresh();
-            }}
-            className="app-button-secondary inline-flex h-11 items-center justify-center rounded-xl px-5 text-sm font-medium"
-          >
-            Refresh
-          </button>
-        </div>
-      </section>
 
       <FleetHealthTable rows={dashboard?.fleetRows ?? []} />
 
@@ -294,7 +257,7 @@ export default function WorkspacePage() {
         />
 
         {userRole === "admin" ? (
-          <AdminDashboardView dashboard={adminDashboard} error={error} onRefresh={loadWorkspace} />
+          <AdminDashboardView dashboard={adminDashboard} error={error} />
         ) : (
           <WorkspaceContainer
             title="Servers"
