@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import Sidebar from "@/components/layouts/sidebar";
 import WorkspaceContainer from "@/components/layouts/workspace-container";
+import FleetHealthTable from "@/components/ui/fleet-health-table";
 import ServerCard from "@/components/ui/server-card";
 import StateCard from "@/components/ui/state-card";
 import { getCurrentUser, type UserRole } from "@/services/authService";
@@ -104,7 +105,7 @@ function AdminDashboardView({
 
       <h1 className="mt-5 text-[42px] font-semibold leading-none text-[var(--app-text)]">Overview</h1>
       <p className="app-text-soft mt-3 max-w-[520px] text-[16px] leading-[22px]">
-        Platform health, owner status, and recent operations.
+        Fleet health, owner status, and recent operations.
       </p>
 
       <div className="mt-10 grid gap-4 xl:grid-cols-4">
@@ -147,6 +148,8 @@ function AdminDashboardView({
           </button>
         </div>
       </section>
+
+      <FleetHealthTable rows={dashboard?.fleetRows ?? []} />
 
       <section id="platform-activity" className="app-card mt-8 rounded-[18px] p-6">
         <h2 className="text-[22px] font-semibold text-[var(--app-text)]">Operations Feed</h2>
@@ -283,8 +286,8 @@ export default function WorkspacePage() {
           tenant={{
             label: userRole === "admin" ? "Platform Scope" : "Active Tenant",
             name: userRole === "admin" ? adminDashboard?.platformScope.name ?? "All tenants" : tenantName,
-            serversCount: serverRows.length,
-            onboardingRunning: serverRows.filter((server) => server.onboarding === "running").length,
+            serversCount: userRole === "admin" ? (adminDashboard?.fleetRows.length ?? 0) : serverRows.length,
+            onboardingRunning: userRole === "admin" ? 0 : serverRows.filter((server) => server.onboarding === "running").length,
             detailLines: userRole === "admin" ? adminDashboard?.platformScope.detailLines : undefined,
             badgeText: userRole === "admin" ? "Command view" : undefined,
           }}

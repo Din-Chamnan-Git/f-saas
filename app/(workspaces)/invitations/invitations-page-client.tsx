@@ -203,7 +203,7 @@ export default function InvitationsPage() {
 
             <h1 className="mt-4 text-[30px] font-semibold leading-tight text-[var(--app-text)]">Create Owner</h1>
             <p className="app-text-soft mt-2 max-w-[640px] text-[14px] leading-[20px]">
-              Create a tenant owner account. The owner is scoped to a single tenant and manages that tenant's resources.
+              Create a tenant owner account. The owner is scoped to a single tenant and manages that tenant&apos;s resources.
             </p>
 
             <section className="app-card mt-6 rounded-xl p-4">

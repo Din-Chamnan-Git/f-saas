@@ -1,6 +1,6 @@
 import { ApiError, apiGet, apiPost, apiPut } from "@/services/apiClient";
 import type { SummaryCard } from "@/types/dahboard";
-import type { ServerOnboardingStatus, ServerRow } from "@/types/server";
+import type { AdminFleetServerRow, ServerOnboardingStatus, ServerRow } from "@/types/server";
 
 export type TenantResponse = {
   id: string;
@@ -76,6 +76,7 @@ export type AdminDashboardData = {
     detail: string;
     timestampLabel: string;
   }>;
+  fleetRows: AdminFleetServerRow[];
   platformScope: {
     name: string;
     detailLines: string[];
@@ -529,34 +530,21 @@ export async function getAdminDashboardData(accessToken: string): Promise<AdminD
   const jobsPromise = apiGet<OnboardingJobResponse[]>("/api/v1/onboarding/jobs", {
     headers: buildAuthHeaders(accessToken),
   });
+  const fleetPromise = apiGet<AdminFleetServerRow[]>("/api/v1/admin/metrics/fleet", {
+    headers: buildAuthHeaders(accessToken),
+  });
 
-  const serverGroupsPromise = Promise.all(
-    tenants.map(async (tenant) => {
-      const servers = await apiGet<ServerResponse[]>(`/api/v1/tenants/${tenant.id}/servers`, {
-        headers: buildAuthHeaders(accessToken),
-      });
-
-      return {
-        tenant,
-        servers,
-      };
-    }),
-  );
-
-  const [jobs, serverGroups] = await Promise.all([jobsPromise, serverGroupsPromise]);
+  const [jobs, fleetRows] = await Promise.all([jobsPromise, fleetPromise]);
 
   const activeTenantCount = tenants.filter((tenant) => tenant.status.toUpperCase() === "ACTIVE").length;
-  const totalServers = serverGroups.reduce((sum, item) => sum + item.servers.length, 0);
+  const totalServers = fleetRows.length;
   const failedJobsCount = jobs.filter((job) => toOnboardingStatus(job.status) === "failed").length;
   const setupCount = Math.max(tenants.length - activeTenantCount, 0);
   const alertCount = failedJobsCount + setupCount;
+  const elevatedServerCount = fleetRows.filter((row) => row.utilizationScore >= 65).length;
+  const criticalServerCount = fleetRows.filter((row) => row.utilizationScore >= 85).length;
 
-  const serverNameById = new Map<string, string>();
-  for (const group of serverGroups) {
-    for (const server of group.servers) {
-      serverNameById.set(server.id, server.name);
-    }
-  }
+  const fleetRowByServerId = new Map(fleetRows.map((row) => [row.serverId, row]));
 
   const tenantNameById = new Map(tenants.map((tenant) => [tenant.id, tenant.name]));
   const activityItems = [...jobs]
@@ -570,11 +558,12 @@ export async function getAdminDashboardData(accessToken: string): Promise<AdminD
           : normalizedStatus === "success"
             ? "completed"
             : "running";
+      const fleetRow = fleetRowByServerId.get(job.serverId);
 
       return {
         id: job.jobId,
-        title: `${serverNameById.get(job.serverId) ?? "Unknown server"} ${statusLabel} ${humanizePlaybook(job.playbookName)}`,
-        detail: tenantNameById.get(job.tenantId) ?? "Unknown tenant",
+        title: `${fleetRow?.serverName ?? "Unknown server"} ${statusLabel} ${humanizePlaybook(job.playbookName)}`,
+        detail: fleetRow?.tenantName ?? tenantNameById.get(job.tenantId) ?? "Unknown tenant",
         timestampLabel: formatRelativeTime(job.createdAt),
       };
     });
@@ -605,7 +594,7 @@ export async function getAdminDashboardData(accessToken: string): Promise<AdminD
       {
         title: "Servers",
         value: String(totalServers),
-        hint: `${serverGroups.filter((group) => group.servers.length > 0).length} tenants with active inventory`,
+        hint: `${criticalServerCount} critical, ${elevatedServerCount} elevated`,
       },
       {
         title: "Alerts",
@@ -614,9 +603,10 @@ export async function getAdminDashboardData(accessToken: string): Promise<AdminD
       },
     ],
     activityItems: activityItems.length > 0 ? activityItems : fallbackActivityItems,
+    fleetRows,
     platformScope: {
       name: "All tenants",
-      detailLines: [`${activeTenantCount} active tenants`, `${alertCount} platform alerts`],
+      detailLines: [`${totalServers} servers across all tenants`, `${criticalServerCount} critical usage`],
     },
   };
 }
