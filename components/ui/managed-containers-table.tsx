@@ -47,6 +47,84 @@ function statusRank(status: string) {
   return 2;
 }
 
+function RestartIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+      focusable="false"
+      className={className}
+    >
+      <path
+        d="M20 12a8 8 0 1 1-2.34-5.66"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M20 4v6h-6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function LoadingIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+      focusable="false"
+      className={className}
+    >
+      <path
+        d="M20 12a8 8 0 1 1-2.34-5.66"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeDasharray="9 5"
+      />
+    </svg>
+  );
+}
+
+function LockIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+      focusable="false"
+      className={className}
+    >
+      <path
+        d="M8 11V8a4 4 0 0 1 8 0v3"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <rect
+        x="5"
+        y="11"
+        width="14"
+        height="9"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export default function ManagedContainersTable({
   rows,
   canRestart,
@@ -169,17 +247,42 @@ export default function ManagedContainersTable({
                         type="button"
                         onClick={() => onRestart(row.id)}
                         disabled={!canUseRestart || isRestarting}
-                        className={`inline-flex h-10 items-center justify-center rounded-xl px-4 text-sm transition ${
+                        aria-label={
+                          isRestarting
+                            ? `Restarting ${row.containerName}`
+                            : `Restart ${row.containerName}`
+                        }
+                        title={
+                          !canUseRestart
+                            ? "Container is read only"
+                            : isRestarting
+                              ? `Restarting ${row.containerName}`
+                              : `Restart ${row.containerName}`
+                        }
+                        className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border transition ${
                           !canUseRestart || isRestarting
-                            ? "cursor-not-allowed border border-[#2a3443] bg-[#10151c] text-[#536277]"
-                            : "bg-[#fc7342] text-[#f2f5fa] hover:brightness-110"
+                            ? "cursor-not-allowed border-[#2a3443] bg-[#10151c] text-[#536277]"
+                            : "border-[#3f4d63] bg-[#fc7342] text-[#f2f5fa] hover:brightness-110"
                         }`}
-                      >
-                        {isRestarting ? "Restarting..." : "Restart"}
+                        >
+                        {isRestarting ? (
+                          <LoadingIcon className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <RestartIcon className="h-4 w-4" />
+                        )}
+                        <span className="sr-only">
+                          {isRestarting ? `Restarting ${row.containerName}` : `Restart ${row.containerName}`}
+                        </span>
                       </button>
                     ) : (
-                      <span className="inline-flex rounded-full border border-[#2a3443] bg-[#10151c] px-3 py-2 text-xs text-[#8c9eba]">
-                        Admin only
+                      <span
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#2a3443] bg-[#10151c] text-[#536277]"
+                        title="Admin only"
+                        aria-label="Admin only"
+                        role="img"
+                      >
+                        <LockIcon className="h-4 w-4" />
+                        <span className="sr-only">Admin only</span>
                       </span>
                     )}
                   </div>
@@ -192,4 +295,3 @@ export default function ManagedContainersTable({
     </section>
   );
 }
-
