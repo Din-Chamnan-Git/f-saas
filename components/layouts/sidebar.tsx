@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TecheyLogo } from "@/components/branding/techey-logo";
 import type { SidebarProps } from "@/types/sidebar";
 
 const defaultHrefByItem: Record<string, string | undefined> = {
@@ -87,15 +88,8 @@ export default function Sidebar({ navItems, activeItem, tenant, sectionLabel, hr
 
   return (
     <aside className="flex flex-col overflow-x-hidden rounded-3xl border border-[#222d3d] bg-[linear-gradient(180deg,#10161f_0%,#0b1118_100%)] p-5 shadow-[0_24px_80px_rgba(2,6,14,0.45)] lg:sticky lg:top-6 lg:self-start lg:p-5">
-      <div className="flex items-center gap-3 border-b border-[#1d2633] pb-5">
-        <span className="relative grid h-10 w-10 place-items-center rounded-2xl bg-[radial-gradient(circle_at_30%_30%,#ffb37a_0%,#fc7342_42%,#8a3516_100%)] text-sm font-semibold text-[#fff3ed] shadow-[0_14px_30px_rgba(252,115,66,0.35)]">
-          M
-          <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full border border-[#10161f] bg-[#ff935d]" />
-        </span>
-        <div className="min-w-0">
-          <p className="text-[11px] font-semibold tracking-[0.22em] text-[#fc7342]">MONITORING</p>
-          <p className="truncate text-lg text-[#f2f5fa]">Monitor SaaS</p>
-        </div>
+      <div className="border-b border-[#1d2633] pb-5">
+        <TecheyLogo className="h-16 w-auto max-w-[220px] drop-shadow-[0_12px_22px_rgba(252,115,66,0.18)]" />
       </div>
 
       <div className="mt-5 flex items-center justify-between">

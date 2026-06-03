@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState, useEffect } from "react";
+import { TecheyLogo } from "@/components/branding/techey-logo";
 import { apiPost } from "@/services/apiClient";
 import { getCurrentUser } from "@/services/authService";
 
@@ -51,10 +52,7 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      const payload = await apiPost<LoginResult, LoginBody>(
-        "/api/v1/auth/login",
-        { email, password, rememberDevice },
-      );
+      await apiPost<LoginResult, LoginBody>("/api/v1/auth/login", { email, password, rememberDevice });
 
       router.push("/dashboard");
     } catch (submitError) {
@@ -73,11 +71,8 @@ export default function LoginPage() {
 
       <main className="relative mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-[390px] items-center justify-center">
         <section className="app-panel w-full rounded-3xl border border-[#2b3647] bg-[linear-gradient(180deg,rgba(27,35,48,0.95)_0%,rgba(21,28,40,0.96)_100%)] p-5 shadow-[0_22px_48px_rgba(4,9,18,0.45)] md:p-6">
-          <div className="mb-5 flex items-center justify-between">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#324055] bg-[#151d29] px-3 py-1.5">
-              <span className="grid h-5 w-5 place-items-center rounded bg-[#fc7342] text-[10px] font-semibold text-[#141a24]">M</span>
-              <span className="text-xs text-[var(--app-text)]">Monitor SaaS</span>
-            </div>
+          <div className="mb-5 flex items-center justify-between gap-3">
+            <TecheyLogo className="h-14 w-auto max-w-[220px] drop-shadow-[0_12px_22px_rgba(252,115,66,0.16)]" />
             <span className="rounded-full bg-[#fc7342]/20 px-2.5 py-1 text-[10px] font-medium tracking-wide text-[#ffc9a9]">SECURE</span>
           </div>
 

@@ -1,0 +1,71 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Techey Infinite Precision Khmer Solution">
+  <defs>
+    <linearGradient id="gold" x1="128" y1="118" x2="1062" y2="772" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFE27A"/>
+      <stop offset="24%" stop-color="#FFCC2A"/>
+      <stop offset="52%" stop-color="#E99B05"/>
+      <stop offset="78%" stop-color="#F7C84A"/>
+      <stop offset="100%" stop-color="#C87400"/>
+    </linearGradient>
+    <linearGradient id="goldDeep" x1="194" y1="286" x2="1014" y2="650" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFD84D"/>
+      <stop offset="50%" stop-color="#EAA000"/>
+      <stop offset="100%" stop-color="#A95F00"/>
+    </linearGradient>
+    <filter id="softShadow" x="0" y="0" width="1200" height="900" filterUnits="userSpaceOnUse">
+      <feOffset dx="0" dy="8"/>
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.33 0 0 0 0 0.20 0 0 0 0 0.03 0 0 0 0.38 0"/>
+      <feBlend in="SourceGraphic" in2="blur" mode="normal"/>
+    </filter>
+    <filter id="innerGlow" x="140" y="230" width="920" height="560" filterUnits="userSpaceOnUse">
+      <feOffset dx="0" dy="2"/>
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 1 0 0 0 0 0.89 0 0 0 0 0.42 0 0 0 0.32 0"/>
+      <feBlend in="SourceGraphic" in2="blur" mode="normal"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#softShadow)">
+    <text
+      x="600"
+      y="240"
+      text-anchor="middle"
+      fill="url(#gold)"
+      font-family="Arial, Helvetica, sans-serif"
+      font-size="128"
+      font-weight="900"
+      letter-spacing="10"
+    >
+      TECHEY
+    </text>
+  </g>
+
+  <g filter="url(#innerGlow)">
+    <text
+      x="600"
+      y="650"
+      text-anchor="middle"
+      fill="url(#goldDeep)"
+      font-family="Arial, Helvetica, sans-serif"
+      font-size="540"
+      font-weight="800"
+      letter-spacing="-24"
+    >
+      ∞
+    </text>
+
+    <text x="355" y="470" transform="rotate(-28 355 470)" fill="#FFF7DA" font-family="Arial, Helvetica, sans-serif" font-size="62" font-weight="800" letter-spacing="4">
+      INFINITE
+    </text>
+    <text x="820" y="470" transform="rotate(28 820 470)" fill="#FFF7DA" font-family="Arial, Helvetica, sans-serif" font-size="62" font-weight="800" letter-spacing="4">
+      PRECISION
+    </text>
+    <text x="343" y="770" transform="rotate(24 343 770)" fill="#FFF7DA" font-family="Arial, Helvetica, sans-serif" font-size="58" font-weight="800" letter-spacing="4">
+      KHMER
+    </text>
+    <text x="813" y="770" transform="rotate(-22 813 770)" fill="#FFF7DA" font-family="Arial, Helvetica, sans-serif" font-size="58" font-weight="800" letter-spacing="4">
+      SOLUTION
+    </text>
+  </g>
+</svg>
