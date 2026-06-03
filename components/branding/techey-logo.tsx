@@ -6,7 +6,7 @@ type TecheyLogoProps = {
 };
 
 export function TecheyLogo({ className, compact = false }: TecheyLogoProps) {
-  const src = "/images/logo.png";
+  const src = "/images/logo1.png";
   const width = 1024;
   const height = 1024;
 
