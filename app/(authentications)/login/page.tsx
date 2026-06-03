@@ -158,10 +158,6 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <details className="app-panel-soft mt-5 rounded-lg border border-[#2c394d] px-3.5 py-2.5 text-[11px] text-[#b8c4d6]">
-            <summary className="cursor-pointer list-none text-[13px] text-[#9ec4ff] hover:text-[#c4dcff]">Demo credentials</summary>
-            <div className="mt-2 text-[11px] text-[#b8c4d6]">admin@techey.local / Admin123!</div>
-          </details>
         </section>
       </main>
     </div>
