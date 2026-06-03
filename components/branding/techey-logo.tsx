@@ -6,9 +6,9 @@ type TecheyLogoProps = {
 };
 
 export function TecheyLogo({ className, compact = false }: TecheyLogoProps) {
-  const src = compact ? "/techey-mark.svg" : "/techey-logo.svg";
-  const width = compact ? 512 : 1200;
-  const height = compact ? 512 : 900;
+  const src = "/images/logo.png";
+  const width = 1024;
+  const height = 1024;
 
   return (
     <Image
@@ -17,7 +17,7 @@ export function TecheyLogo({ className, compact = false }: TecheyLogoProps) {
       width={width}
       height={height}
       priority
-      className={className ?? "h-auto w-full"}
+      className={className ?? "h-auto w-full object-contain"}
       sizes={compact ? "96px" : "(max-width: 768px) 260px, 320px"}
     />
   );

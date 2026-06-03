@@ -6,8 +6,8 @@ export const metadata: Metadata = {
   title: "Techey | Infinite Precision Khmer Solution",
   description: "Monitoring, alerting, logs, and fleet operations for the Techey Solution platform.",
   icons: {
-    icon: "/techey-mark.svg",
-    apple: "/techey-mark.svg",
+    icon: "/images/logo.png",
+    apple: "/images/logo.png",
   },
 };
 
