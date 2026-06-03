@@ -505,7 +505,7 @@ function ToolbarSelector({
                     <p className="truncate text-sm">{option.label}</p>
                     {option.description ? <p className="mt-1 text-xs text-[#7688a2]">{option.description}</p> : null}
                   </div>
-                  {isActive ? <span className="text-xs text-[#fc7342]">●</span> : null}
+                  {isActive ? <span className="text-xs text-[#c98a00]">●</span> : null}
                 </button>
               );
             })}
@@ -716,7 +716,7 @@ function MetricSeriesCard({
             <div className="flex flex-wrap items-center gap-4 text-xs">
               <span className="font-mono text-[#6f819c]">{series?.range ?? "No range"}</span>
               <span className="font-mono text-[#89d6ab]">min {formatChartValue(metric, minValue)}</span>
-              <span className="font-mono text-[#ffb38f]">max {formatChartValue(metric, rawMaxValue)}</span>
+              <span className="font-mono text-[#f0c860]">max {formatChartValue(metric, rawMaxValue)}</span>
               <span>{latestPoint ? `updated ${formatPointTime(latestPoint.timestamp)}` : "No data"}</span>
               {currentSeverity ? <span className={currentSeverity.className}>{currentSeverity.hint}</span> : null}
             </div>
@@ -775,7 +775,7 @@ function TopContainersCard({
                   )}
                 </div>
                 <div className="flex flex-col items-end gap-2 text-right">
-                  <p className="font-mono text-base font-semibold text-[#ffb38f]">{formatTopContainerValue(metric, container.value)}</p>
+                  <p className="font-mono text-base font-semibold text-[#f0c860]">{formatTopContainerValue(metric, container.value)}</p>
                   <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-[0.12em] ${level.className}`}>
                     {level.label}
                   </span>
@@ -1241,7 +1241,7 @@ export default function MetricsPage() {
           <div className="rounded-2xl border border-[#252f3d] bg-[linear-gradient(180deg,#171d26_0%,#10151d_100%)] px-5 py-5">
             <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
               <div>
-                <p className="text-[11px] tracking-[0.22em] text-[#fc7342]">DASHBOARDS / INFRASTRUCTURE</p>
+                <p className="text-[11px] tracking-[0.22em] text-[#c98a00]">DASHBOARDS / INFRASTRUCTURE</p>
                 <h1 className="mt-3 text-4xl leading-none text-[#f2f5fa] md:text-5xl">Host Metrics Overview</h1>
                 <p className="mt-3 max-w-3xl text-sm leading-6 text-[#8ea0bb]">
                   Grafana-inspired workspace for Prometheus-backed host panels. Tenant, server, and range selection stay in the toolbar so you can pivot fast without leaving the dashboard.
@@ -1252,7 +1252,7 @@ export default function MetricsPage() {
                 <span className="rounded-xl border border-[#2a3443] bg-[#131922] px-3 py-2 text-[11px] tracking-[0.18em] text-[#8ea0bb]">
                   DATASOURCE: PROMETHEUS
                 </span>
-                <span className="rounded-xl border border-[#3c2a24] bg-[#211512] px-3 py-2 text-[11px] tracking-[0.18em] text-[#ffb38f]">
+                <span className="rounded-xl border border-[#3c2f00] bg-[#1f1700] px-3 py-2 text-[11px] tracking-[0.18em] text-[#f0c860]">
                   VIA BACKEND API
                 </span>
               </div>
@@ -1328,7 +1328,7 @@ export default function MetricsPage() {
                   onClick={() => {
                     void loadMetrics();
                   }}
-                  className="h-11 rounded-xl bg-[#fc7342] px-4 text-sm text-[#f2f5fa] hover:brightness-110"
+                  className="h-11 rounded-xl bg-[#c98a00] px-4 text-sm text-[#f2f5fa] hover:brightness-110"
                 >
                   Refresh now
                 </button>
@@ -1346,7 +1346,7 @@ export default function MetricsPage() {
               </p>
               <Link
                 href="/tenants/create"
-                className="mt-5 inline-flex h-11 items-center justify-center rounded-xl bg-[#fc7342] px-6 text-sm text-[#f2f5fa] hover:brightness-110"
+                className="mt-5 inline-flex h-11 items-center justify-center rounded-xl bg-[#c98a00] px-6 text-sm text-[#f2f5fa] hover:brightness-110"
               >
                 Create Tenant
               </Link>
@@ -1361,7 +1361,7 @@ export default function MetricsPage() {
               </p>
               <Link
                 href="/servers/create"
-                className="mt-5 inline-flex h-11 items-center justify-center rounded-xl bg-[#fc7342] px-6 text-sm text-[#f2f5fa] hover:brightness-110"
+                className="mt-5 inline-flex h-11 items-center justify-center rounded-xl bg-[#c98a00] px-6 text-sm text-[#f2f5fa] hover:brightness-110"
               >
                 Add Server
               </Link>

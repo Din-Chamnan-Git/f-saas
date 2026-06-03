@@ -274,7 +274,7 @@ export default function WorkspacePage() {
                 />
                 <Link
                   href="/servers/create"
-                  className="inline-flex h-11 items-center justify-center rounded-xl bg-[#fc7342] px-6 text-sm text-[#f2f5fa] hover:brightness-110"
+                  className="inline-flex h-11 items-center justify-center rounded-xl bg-[#c98a00] px-6 text-sm text-[#f2f5fa] hover:brightness-110"
                 >
                   Add Server
                 </Link>

@@ -66,14 +66,14 @@ export default function LoginPage() {
   return (
     <div className="app-shell-bg relative min-h-screen overflow-hidden px-4 py-8 md:px-6 md:py-12" data-node-id="40:2">
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-20 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-[#fc7342]/10 blur-3xl" />
+        <div className="absolute -top-20 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-[#c98a00]/10 blur-3xl" />
       </div>
 
       <main className="relative mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-[390px] items-center justify-center">
         <section className="app-panel w-full rounded-3xl border border-[#2b3647] bg-[linear-gradient(180deg,rgba(27,35,48,0.95)_0%,rgba(21,28,40,0.96)_100%)] p-5 shadow-[0_22px_48px_rgba(4,9,18,0.45)] md:p-6">
           <div className="mb-5 flex items-center justify-between gap-3">
-            <TecheyLogo className="h-14 w-auto max-w-[220px] drop-shadow-[0_12px_22px_rgba(252,115,66,0.16)]" />
-            <span className="rounded-full bg-[#fc7342]/20 px-2.5 py-1 text-[10px] font-medium tracking-wide text-[#ffc9a9]">SECURE</span>
+            <TecheyLogo className="h-14 w-auto max-w-[220px] drop-shadow-[0_12px_22px_rgba(201,138,0,0.16)]" />
+            <span className="rounded-full bg-[#c98a00]/20 px-2.5 py-1 text-[10px] font-medium tracking-wide text-[#f6df9a]">SECURE</span>
           </div>
 
           <h1 className="text-center text-[30px] font-semibold leading-tight text-[var(--app-text)]">Welcome back</h1>
@@ -138,7 +138,7 @@ export default function LoginPage() {
                   type="checkbox"
                   checked={rememberDevice}
                   onChange={(event) => setRememberDevice(event.target.checked)}
-                  className="h-4 w-4 appearance-none rounded border border-[#2b3647] bg-[#1a2230] checked:border-[#fc7342] checked:bg-[#fc7342] focus:ring-2 focus:ring-[#9ec4ff]/40 focus:outline-none"
+                  className="h-4 w-4 appearance-none rounded border border-[#2b3647] bg-[#1a2230] checked:border-[#c98a00] checked:bg-[#c98a00] focus:ring-2 focus:ring-[#9ec4ff]/40 focus:outline-none"
                 />
                 Remember me
               </label>

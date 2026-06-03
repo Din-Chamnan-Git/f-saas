@@ -89,7 +89,7 @@ export default function Sidebar({ navItems, activeItem, tenant, sectionLabel, hr
   return (
     <aside className="flex flex-col overflow-x-hidden rounded-3xl border border-[#222d3d] bg-[linear-gradient(180deg,#10161f_0%,#0b1118_100%)] p-5 shadow-[0_24px_80px_rgba(2,6,14,0.45)] lg:sticky lg:top-6 lg:self-start lg:p-5">
       <div className="border-b border-[#1d2633] pb-5">
-        <TecheyLogo className="h-16 w-auto max-w-[220px] drop-shadow-[0_12px_22px_rgba(252,115,66,0.18)]" />
+        <TecheyLogo className="h-16 w-auto max-w-[220px] drop-shadow-[0_12px_22px_rgba(201,138,0,0.18)]" />
       </div>
 
       <div className="mt-5 flex items-center justify-between">
@@ -114,21 +114,21 @@ export default function Sidebar({ navItems, activeItem, tenant, sectionLabel, hr
                     href={navHrefByItem[item] ?? "#"}
                     className={`group flex h-11 w-full items-center gap-3 rounded-2xl border px-3.5 text-left text-sm transition ${
                       isActive
-                        ? "border-[#2d445f] bg-[linear-gradient(90deg,rgba(252,115,66,0.16)_0%,rgba(28,37,49,0.9)_42%,rgba(17,24,35,1)_100%)] text-[#f2f5fa] shadow-[inset_3px_0_0_0_#fc7342]"
+                        ? "border-[#2d445f] bg-[linear-gradient(90deg,rgba(201,138,0,0.16)_0%,rgba(28,37,49,0.9)_42%,rgba(17,24,35,1)_100%)] text-[#f2f5fa] shadow-[inset_3px_0_0_0_#c98a00]"
                         : "border-transparent bg-transparent text-[#d4deed] hover:border-[#1f2a39] hover:bg-[#141b24]"
                     } ${navHrefByItem[item] ? "" : "pointer-events-none opacity-60"}`}
                   >
                     <span
                       className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl border text-[11px] font-semibold tracking-[0.08em] ${
                         isActive
-                          ? "border-[#a14f2e] bg-[#3a241c] text-[#ffb38f]"
+                          ? "border-[#805500] bg-[#3b2c00] text-[#f0c860]"
                           : "border-[#273142] bg-[#121922] text-[#87a5d4] group-hover:border-[#31425b]"
                       }`}
                     >
                       {meta?.icon ?? item.slice(0, 1)}
                     </span>
                     <span className="flex-1 truncate">{displayLabelByItem[item] ?? item}</span>
-                    <span className={`text-xs ${isActive ? "text-[#fc7342]" : "text-[#5c6d86] group-hover:text-[#9ec4ff]"}`}>›</span>
+                    <span className={`text-xs ${isActive ? "text-[#c98a00]" : "text-[#5c6d86] group-hover:text-[#9ec4ff]"}`}>›</span>
                   </Link>
                 );
               })}
@@ -142,14 +142,14 @@ export default function Sidebar({ navItems, activeItem, tenant, sectionLabel, hr
           href="/profile"
           className={`flex h-11 w-full items-center gap-3 rounded-2xl border px-3.5 text-left text-sm transition ${
             profileIsActive
-              ? "border-[#2d445f] bg-[linear-gradient(90deg,rgba(252,115,66,0.16)_0%,rgba(28,37,49,0.9)_42%,rgba(17,24,35,1)_100%)] text-[#f2f5fa] shadow-[inset_3px_0_0_0_#fc7342]"
+              ? "border-[#2d445f] bg-[linear-gradient(90deg,rgba(201,138,0,0.16)_0%,rgba(28,37,49,0.9)_42%,rgba(17,24,35,1)_100%)] text-[#f2f5fa] shadow-[inset_3px_0_0_0_#c98a00]"
               : "border-transparent bg-transparent text-[#d4deed] hover:border-[#1f2a39] hover:bg-[#141b24]"
           }`}
         >
           <span
             className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl border text-[11px] font-semibold tracking-[0.08em] ${
               profileIsActive
-                ? "border-[#a14f2e] bg-[#3a241c] text-[#ffb38f]"
+                ? "border-[#805500] bg-[#3b2c00] text-[#f0c860]"
                 : "border-[#273142] bg-[#121922] text-[#87a5d4]"
             }`}
           >
@@ -171,7 +171,7 @@ export default function Sidebar({ navItems, activeItem, tenant, sectionLabel, hr
 
             <div className={`mt-3 ${hasAccountAvatar ? "flex items-start gap-3" : ""}`}>
               {hasAccountAvatar ? (
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[linear-gradient(180deg,#ff935d_0%,#fc7342_100%)] text-sm font-semibold uppercase text-[#f2f5fa] shadow-[0_10px_24px_rgba(252,115,66,0.28)]">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[linear-gradient(180deg,#d9a100_0%,#c98a00_100%)] text-sm font-semibold uppercase text-[#f2f5fa] shadow-[0_10px_24px_rgba(201,138,0,0.28)]">
                   {tenant.avatarText}
                 </span>
               ) : null}

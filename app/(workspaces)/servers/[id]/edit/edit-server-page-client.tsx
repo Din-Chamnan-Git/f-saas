@@ -33,7 +33,7 @@ const tenantHrefByItem = {
 function Toggle({
   checked,
   onToggle,
-  accent = "bg-[#fc7342]",
+  accent = "bg-[#c98a00]",
 }: {
   checked: boolean;
   onToggle: () => void;

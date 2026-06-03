@@ -181,7 +181,7 @@ function ToolbarSelector({
                     <p className="truncate text-sm">{option.label}</p>
                     {option.description ? <p className="mt-1 text-xs text-[#7688a2]">{option.description}</p> : null}
                   </div>
-                  {isActive ? <span className="text-xs text-[#fc7342]">●</span> : null}
+                  {isActive ? <span className="text-xs text-[#c98a00]">●</span> : null}
                 </button>
               );
             })}
@@ -627,7 +627,7 @@ export default function LogsPage() {
                 onClick={() => {
                   void loadLogs();
                 }}
-                className="h-10 rounded-xl bg-[#fc7342] px-4 text-sm text-[#f2f5fa] hover:brightness-110"
+                className="h-10 rounded-xl bg-[#c98a00] px-4 text-sm text-[#f2f5fa] hover:brightness-110"
               >
                 Refresh now
               </button>
@@ -738,7 +738,7 @@ export default function LogsPage() {
                     setAppliedSearch(searchInput.trim());
                     setAppliedContainer(containerInput.trim());
                   }}
-                  className="h-11 rounded-xl bg-[#fc7342] px-5 text-sm text-[#f2f5fa] hover:brightness-110"
+                  className="h-11 rounded-xl bg-[#c98a00] px-5 text-sm text-[#f2f5fa] hover:brightness-110"
                 >
                   Apply filters
                 </button>
@@ -773,7 +773,7 @@ export default function LogsPage() {
               <p className="text-sm text-[#8ea0bb]">Add a server under this tenant before trying to inspect logs.</p>
               <Link
                 href="/servers/create"
-                className="mt-5 inline-flex h-11 items-center justify-center rounded-xl bg-[#fc7342] px-6 text-sm text-[#f2f5fa] hover:brightness-110"
+                className="mt-5 inline-flex h-11 items-center justify-center rounded-xl bg-[#c98a00] px-6 text-sm text-[#f2f5fa] hover:brightness-110"
               >
                 Add Server
               </Link>

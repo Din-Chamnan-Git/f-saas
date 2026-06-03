@@ -211,7 +211,7 @@ export default function CreateTenantPage() {
             <ul className="app-text-soft mt-6 space-y-4 text-sm">
               {guidanceItems.map((item) => (
                 <li key={item} className="flex items-start gap-3">
-                  <span className="mt-1.5 h-2 w-2 rounded-full bg-[#fc7342]" />
+                  <span className="mt-1.5 h-2 w-2 rounded-full bg-[#c98a00]" />
                   <span>{item}</span>
                 </li>
               ))}
@@ -349,7 +349,7 @@ export default function CreateTenantPage() {
                           <button
                             type="button"
                             onClick={() => handleOpenTenant(tenant.id)}
-                            className="h-10 rounded-xl bg-[#fc7342] px-5 text-sm text-[#f2f5fa] hover:brightness-110"
+                            className="h-10 rounded-xl bg-[#c98a00] px-5 text-sm text-[#f2f5fa] hover:brightness-110"
                           >
                             Open Workspace
                           </button>

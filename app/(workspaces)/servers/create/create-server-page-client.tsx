@@ -41,7 +41,7 @@ function toInstanceAlias(value: string) {
 function Toggle({
   checked,
   onToggle,
-  accent = "bg-[#fc7342]",
+  accent = "bg-[#c98a00]",
 }: {
   checked: boolean;
   onToggle: () => void;
@@ -400,15 +400,15 @@ export default function CreateServerPage() {
               </p>
               <div className="mt-6 space-y-4 text-[14px] leading-[20px] text-[#8c9eba]">
                 <p className="flex gap-4">
-                  <span className="mt-[6px] h-2 w-2 rounded-full bg-[#fc7342]" />
+                  <span className="mt-[6px] h-2 w-2 rounded-full bg-[#c98a00]" />
                   <span>Instance should be a clean alias like dev-server-1, not ip:port.</span>
                 </p>
                 <p className="flex gap-4">
-                  <span className="mt-[6px] h-2 w-2 rounded-full bg-[#fc7342]" />
+                  <span className="mt-[6px] h-2 w-2 rounded-full bg-[#c98a00]" />
                   <span>Ansible host should be the SSH target, usually the same as the server IP.</span>
                 </p>
                 <p className="flex gap-4">
-                  <span className="mt-[6px] h-2 w-2 rounded-full bg-[#fc7342]" />
+                  <span className="mt-[6px] h-2 w-2 rounded-full bg-[#c98a00]" />
                   <span>Docker enabled should reflect whether container monitoring and logs are expected.</span>
                 </p>
               </div>
