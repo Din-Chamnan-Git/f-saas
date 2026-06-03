@@ -1074,21 +1074,6 @@ export async function listManagedContainers(
   });
 }
 
-export async function restartManagedContainer(
-  accessToken: string,
-  tenantId: string,
-  serverId: string,
-  containerId: string,
-): Promise<ManagedContainerResponse> {
-  return apiPost<ManagedContainerResponse, Record<string, never>>(
-    `/api/v1/tenants/${tenantId}/servers/${serverId}/containers/${containerId}/restart`,
-    {},
-    {
-      headers: buildAuthHeaders(accessToken),
-    },
-  );
-}
-
 export async function getServerLogs(
   accessToken: string,
   tenantId: string,

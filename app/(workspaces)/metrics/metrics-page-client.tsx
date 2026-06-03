@@ -11,7 +11,6 @@ import {
   getServerOverview,
   getTopContainers,
   listManagedContainers,
-  restartManagedContainer,
   listTenantServers,
   listTenants,
   type MetricSeriesResponse,
@@ -821,8 +820,6 @@ export default function MetricsPage() {
   const [topCpu, setTopCpu] = useState<TopContainerMetricResponse | null>(null);
   const [topMemory, setTopMemory] = useState<TopContainerMetricResponse | null>(null);
   const [managedContainers, setManagedContainers] = useState<ManagedContainerResponse[]>([]);
-  const [pendingContainerId, setPendingContainerId] = useState<string | null>(null);
-  const [containerNotice, setContainerNotice] = useState<{ tone: "success" | "error"; message: string } | null>(null);
   const [isLoadingContext, setIsLoadingContext] = useState(true);
   const [isLoadingMetrics, setIsLoadingMetrics] = useState(false);
   const [isRefreshFxActive, setIsRefreshFxActive] = useState(false);
@@ -1156,35 +1153,6 @@ export default function MetricsPage() {
     }
   }, [selectedRange, selectedServer?.dockerEnabled, selectedServerId, selectedTenantId]);
 
-  const handleRestartContainer = useCallback(
-    async (containerId: string) => {
-      if (!selectedTenantId || !selectedServerId || !selectedServer?.dockerEnabled || userRole !== "admin") {
-        return;
-      }
-
-      setPendingContainerId(containerId);
-      setContainerNotice(null);
-
-      try {
-        const accessToken = "";
-        await restartManagedContainer(accessToken, selectedTenantId, selectedServerId, containerId);
-        setContainerNotice({
-          tone: "success",
-          message: "Container restart requested successfully.",
-        });
-        await loadMetrics();
-      } catch (restartError) {
-        setContainerNotice({
-          tone: "error",
-          message: restartError instanceof Error ? restartError.message : "Unable to restart the container.",
-        });
-      } finally {
-        setPendingContainerId(null);
-      }
-    },
-    [loadMetrics, selectedServer?.dockerEnabled, selectedServerId, selectedTenantId, userRole],
-  );
-
   useEffect(() => {
     void loadMetrics();
   }, [loadMetrics]);
@@ -1449,13 +1417,7 @@ export default function MetricsPage() {
               </div>
 
               {selectedServer.dockerEnabled ? (
-                <ManagedContainersTable
-                  rows={managedContainers}
-                  canRestart={userRole === "admin"}
-                  pendingContainerId={pendingContainerId}
-                  onRestart={handleRestartContainer}
-                  notice={containerNotice}
-                />
+                <ManagedContainersTable rows={managedContainers} />
               ) : null}
             </>
           ) : null}

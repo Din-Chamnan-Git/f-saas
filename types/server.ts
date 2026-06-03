@@ -41,9 +41,5 @@ export type ManagedContainerRow = {
   containerName: string;
   status: ManagedContainerStatus;
   statusMessage: string | null;
-  restartable: boolean;
   lastSeenAt: string | null;
-  lastRestartAt: string | null;
-  lastRestartStatus: string | null;
-  lastRestartMessage: string | null;
 };
