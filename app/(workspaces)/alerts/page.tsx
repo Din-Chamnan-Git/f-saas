@@ -41,6 +41,7 @@ const EMPTY_POLICY: UpsertAlertPolicyInput = {
   serverDownForMinutes: null,
   containerDownForMinutes: null,
   containerRestartCount: null,
+  resourceAlertWindowMinutes: 5,
   customMetricName: null,
   customPromqlQuery: null,
   customComparison: null,
@@ -154,6 +155,7 @@ function alertPolicyToInput(policy: {
     serverDownForMinutes: policy.serverDownForMinutes,
     containerDownForMinutes: policy.containerDownForMinutes,
     containerRestartCount: policy.containerRestartCount,
+    resourceAlertWindowMinutes: policy.resourceAlertWindowMinutes ?? 5,
     customMetricName: policy.customMetricName,
     customPromqlQuery: policy.customPromqlQuery,
     customComparison: policy.customComparison,
@@ -857,6 +859,24 @@ export default function AlertsPage() {
                 </label>
               </div>
 
+              <label className="mt-5 block">
+                <span className="app-text-soft text-[13px]">Resource Alert Window (min)</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={1440}
+                  value={valueOrEmpty(globalPolicy.resourceAlertWindowMinutes)}
+                  onChange={(event) => setGlobalPolicy((current) => ({
+                    ...current,
+                    resourceAlertWindowMinutes: toNullableNumber(event.target.value),
+                  }))}
+                  className="app-input mt-2 h-11 w-full rounded-xl px-4"
+                />
+                <p className="app-text-soft mt-2 text-[11px] leading-[16px]">
+                  Used by CPU, memory, and disk alerts for the rule window and alert delay.
+                </p>
+              </label>
+
               <label className="mt-6 flex items-center gap-3 text-[14px]">
                 <input
                   type="checkbox"
@@ -1081,6 +1101,25 @@ export default function AlertsPage() {
                 />
               </label>
             </div>
+
+            <label className="mt-5 block">
+              <span className="app-text-soft text-[13px]">Resource Alert Window (min)</span>
+              <input
+                type="number"
+                min={1}
+                max={1440}
+                value={valueOrEmpty(tenantPolicy.resourceAlertWindowMinutes)}
+                onChange={(event) => setTenantPolicy((current) => ({
+                  ...current,
+                  resourceAlertWindowMinutes: toNullableNumber(event.target.value),
+                }))}
+                disabled={!canManageSettings}
+                className="app-input mt-2 h-11 w-full rounded-xl px-4 disabled:opacity-70"
+              />
+              <p className="app-text-soft mt-2 text-[11px] leading-[16px]">
+                Used by CPU, memory, and disk alerts for the rule window and alert delay.
+              </p>
+            </label>
 
             <div className="mt-6">
               <h3 className="text-[16px] font-semibold text-[var(--app-text)]">Advanced Custom Alert (Optional)</h3>
@@ -1308,6 +1347,25 @@ export default function AlertsPage() {
                 />
               </label>
             </div>
+
+            <label className="mt-5 block">
+              <span className="app-text-soft text-[13px]">Resource Alert Window (min)</span>
+              <input
+                type="number"
+                min={1}
+                max={1440}
+                value={valueOrEmpty(serverPolicy.resourceAlertWindowMinutes)}
+                onChange={(event) => setServerPolicy((current) => ({
+                  ...current,
+                  resourceAlertWindowMinutes: toNullableNumber(event.target.value),
+                }))}
+                disabled={!canManageSettings || !selectedServerId}
+                className="app-input mt-2 h-11 w-full rounded-xl px-4 disabled:opacity-70"
+              />
+              <p className="app-text-soft mt-2 text-[11px] leading-[16px]">
+                Used by CPU, memory, and disk alerts for the rule window and alert delay.
+              </p>
+            </label>
 
             <div className="mt-6">
               <h3 className="text-[16px] font-semibold text-[var(--app-text)]">Advanced Custom Alert (Optional)</h3>

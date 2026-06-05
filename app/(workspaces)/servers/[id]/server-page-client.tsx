@@ -93,6 +93,7 @@ const EMPTY_SERVER_POLICY: UpsertAlertPolicyInput = {
   serverDownForMinutes: null,
   containerDownForMinutes: null,
   containerRestartCount: null,
+  resourceAlertWindowMinutes: 5,
   customMetricName: null,
   customPromqlQuery: null,
   customComparison: null,
@@ -222,6 +223,7 @@ export default function ServerDetailPage() {
           serverDownForMinutes: serverPolicyResponse.serverDownForMinutes,
           containerDownForMinutes: serverPolicyResponse.containerDownForMinutes,
           containerRestartCount: serverPolicyResponse.containerRestartCount,
+          resourceAlertWindowMinutes: serverPolicyResponse.resourceAlertWindowMinutes ?? 5,
           customMetricName: serverPolicyResponse.customMetricName,
           customPromqlQuery: serverPolicyResponse.customPromqlQuery,
           customComparison: serverPolicyResponse.customComparison,
@@ -527,6 +529,25 @@ export default function ServerDetailPage() {
                   </label>
                 </div>
 
+                <label className="mt-4 block">
+                  <span className="app-label">Resource Alert Window (min)</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={1440}
+                    value={valueOrEmpty(serverPolicy.resourceAlertWindowMinutes)}
+                    onChange={(event) => setServerPolicy((current) => ({
+                      ...current,
+                      resourceAlertWindowMinutes: toNullableNumber(event.target.value),
+                    }))}
+                    disabled={!canManageAlertOverride}
+                    className="app-input mt-2 h-11 w-full rounded-xl px-4 disabled:opacity-70"
+                  />
+                  <p className="app-text-soft mt-2 text-[11px] leading-[16px]">
+                    Used by CPU, memory, and disk alerts for the rule window and alert delay.
+                  </p>
+                </label>
+
                 <div className="mt-4 grid gap-4 md:grid-cols-[1fr_200px_200px]">
                   <label className="block">
                     <span className="app-label">Custom Metric Name</span>
@@ -622,6 +643,9 @@ export default function ServerDetailPage() {
                       <p>Server Down: {effectivePolicy.serverDownForMinutes}m ({effectivePolicy.serverDownSource})</p>
                       <p>Container Down: {effectivePolicy.containerDownForMinutes}m ({effectivePolicy.containerDownSource})</p>
                       <p>Restart Count: {effectivePolicy.containerRestartCount} ({effectivePolicy.containerRestartSource})</p>
+                      <p>
+                        Resource Window: {effectivePolicy.resourceAlertWindowMinutes}m ({effectivePolicy.resourceAlertWindowSource})
+                      </p>
                       <p>Enabled: {effectivePolicy.enabled ? "yes" : "no"} ({effectivePolicy.enabledSource})</p>
                       <p>Custom Metric Source: {effectivePolicy.customMetricSource}</p>
                     </div>

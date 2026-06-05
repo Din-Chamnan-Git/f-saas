@@ -48,6 +48,7 @@ export type AlertPolicy = {
   serverDownForMinutes: number | null;
   containerDownForMinutes: number | null;
   containerRestartCount: number | null;
+  resourceAlertWindowMinutes: number | null;
   customMetricName: string | null;
   customPromqlQuery: string | null;
   customComparison: ">" | ">=" | "<" | "<=" | null;
@@ -63,6 +64,7 @@ export type UpsertAlertPolicyInput = {
   serverDownForMinutes: number | null;
   containerDownForMinutes: number | null;
   containerRestartCount: number | null;
+  resourceAlertWindowMinutes: number | null;
   customMetricName: string | null;
   customPromqlQuery: string | null;
   customComparison: ">" | ">=" | "<" | "<=" | null;
@@ -85,6 +87,8 @@ export type EffectiveAlertPolicy = {
   containerDownSource: "server" | "tenant" | "global" | "default";
   containerRestartCount: number;
   containerRestartSource: "server" | "tenant" | "global" | "default";
+  resourceAlertWindowMinutes: number;
+  resourceAlertWindowSource: "server" | "tenant" | "global" | "default";
   customMetricName: string | null;
   customPromqlQuery: string | null;
   customComparison: ">" | ">=" | "<" | "<=" | null;
