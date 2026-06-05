@@ -234,6 +234,7 @@ export default function AlertsPage() {
     "relative overflow-hidden rounded-[28px] border border-[#243142] bg-[linear-gradient(180deg,rgba(18,25,34,0.98)_0%,rgba(12,17,26,0.98)_100%)] p-6 shadow-[0_22px_60px_rgba(2,7,16,0.24)]";
   const summaryCardClass =
     "rounded-[22px] border border-[#2a3546] bg-[linear-gradient(180deg,rgba(18,25,36,0.92)_0%,rgba(13,19,29,0.92)_100%)] p-4";
+  const pillClass = "inline-flex rounded-full bg-[#162437] px-4 py-1 text-[12px] font-medium text-[#8db6ff]";
   const permissionLabel = canManageSettings
     ? isAdmin
       ? "Admin write access"
@@ -598,7 +599,7 @@ export default function AlertsPage() {
         />
 
         <section className="app-panel rounded-3xl p-6 md:p-8 lg:min-h-[calc(100vh-4rem)]">
-          <div className="inline-flex rounded-full bg-[#553819] px-4 py-1 text-[12px] font-medium text-[#ffd09a]">
+          <div className={pillClass}>
             ALERT CONTROL
           </div>
 
@@ -612,11 +613,10 @@ export default function AlertsPage() {
           {error ? <p className="mt-6 text-sm text-[#ff9b7a]">{error}</p> : null}
 
           <section className={`${surfaceCardClass} mt-6`}>
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(96,129,215,0.18),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(255,180,110,0.12),transparent_28%)]" />
-            <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
               <div className="max-w-2xl">
-                <div className="inline-flex items-center gap-2 rounded-full border border-[#33415a] bg-[#111826] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#9ec4ff]">
-                  <span className="inline-block h-2 w-2 rounded-full bg-[#f0c860]" />
+                <div className="inline-flex items-center gap-2 rounded-full border border-[#314153] bg-[#111721] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#9ec4ff]">
+                  <span className="inline-block h-2 w-2 rounded-full bg-[#9ec4ff]" />
                   Policy cockpit
                 </div>
 
@@ -657,112 +657,111 @@ export default function AlertsPage() {
             </div>
           </section>
 
-          <div className="mt-6 grid gap-4 xl:grid-cols-[1fr_1fr_360px]">
-            {isAdmin ? (
-              <section className={`${surfaceCardClass}`}>
-                <div className="inline-flex rounded-full bg-[#241b10] px-3 py-1 text-[10px] font-medium uppercase tracking-[0.12em] text-[#d7a66b]">
-                  Scope
-                </div>
-                <h2 className="mt-3 text-[18px] font-semibold text-[var(--app-text)]">Tenant Scope</h2>
-                <p className="app-text-soft mt-1 text-[12px] leading-[18px]">
-                  Select the tenant you want to manage. Server scope updates below will follow this selection.
-                </p>
+          <div className="mt-6 grid gap-6 xl:grid-cols-[340px_1fr]">
+            <aside className="space-y-4 xl:sticky xl:top-6 xl:self-start">
+              {isAdmin ? (
+                <section className={surfaceCardClass}>
+                  <div className="inline-flex rounded-full border border-[#314153] bg-[#111721] px-3 py-1 text-[10px] font-medium uppercase tracking-[0.12em] text-[#9ec4ff]">
+                    Scope
+                  </div>
+                  <h2 className="mt-3 text-[18px] font-semibold text-[var(--app-text)]">Tenant Scope</h2>
+                  <p className="app-text-soft mt-1 text-[12px] leading-[18px]">
+                    Select the tenant you want to manage. Server scope updates below will follow this selection.
+                  </p>
 
-                <label className="mt-5 flex flex-col gap-2 text-sm">
-                  <span className="app-text-soft text-[12px]">Tenant</span>
-                  <select
-                    value={selectedTenantId}
-                    onChange={(event) => {
-                      setSelectedTenantId(event.target.value);
-                      setSelectedServerId("");
-                    }}
-                    className="app-input h-11 rounded-xl border border-white/10 px-3 text-[13px] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
-                  >
-                    {tenants.map((tenant) => (
-                      <option key={tenant.id} value={tenant.id}>
-                        {tenant.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                  <label className="mt-5 flex flex-col gap-2 text-sm">
+                    <span className="app-text-soft text-[12px]">Tenant</span>
+                    <select
+                      value={selectedTenantId}
+                      onChange={(event) => {
+                        setSelectedTenantId(event.target.value);
+                        setSelectedServerId("");
+                      }}
+                      className="app-input h-11 rounded-xl border border-white/10 px-3 text-[13px] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                    >
+                      {tenants.map((tenant) => (
+                        <option key={tenant.id} value={tenant.id}>
+                          {tenant.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </section>
+              ) : null}
+
+              {canManageSettings ? (
+                <section className={surfaceCardClass}>
+                  <div className="inline-flex rounded-full border border-[#314153] bg-[#111721] px-3 py-1 text-[10px] font-medium uppercase tracking-[0.12em] text-[#9ec4ff]">
+                    Scope
+                  </div>
+                  <h2 className="mt-3 text-[18px] font-semibold text-[var(--app-text)]">Server Scope</h2>
+                  <p className="app-text-soft mt-1 text-[12px] leading-[18px]">
+                    Choose a server under the selected tenant to edit its alert policy.
+                  </p>
+
+                  <label className="mt-5 flex flex-col gap-2 text-sm">
+                    <span className="app-text-soft text-[12px]">Server</span>
+                    <select
+                      value={selectedServerId}
+                      onChange={(event) => setSelectedServerId(event.target.value)}
+                      disabled={!tenantServers.length}
+                      className="app-input h-11 rounded-xl border border-white/10 px-3 text-[13px] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                    >
+                      <option value="">{tenantServers.length ? "Select a server" : "No servers available"}</option>
+                      {tenantServers.map((server) => (
+                        <option key={server.id} value={server.id}>
+                          {server.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <div className="mt-4 rounded-xl border border-white/6 bg-black/10 px-3 py-2.5">
+                    <p className="app-text-soft text-[12px] leading-[18px]">
+                      Server-level thresholds override tenant and global defaults for the selected server only.
+                    </p>
+                  </div>
+                </section>
+              ) : null}
+
+              <section className={surfaceCardClass}>
+                <div className="inline-flex rounded-full border border-[#314153] bg-[#111721] px-3 py-1 text-[10px] font-medium uppercase tracking-[0.12em] text-[#9ec4ff]">
+                  Control notes
+                </div>
+                <h2 className="mt-3 text-[18px] font-semibold text-[var(--app-text)]">How this page behaves</h2>
+                <div className="mt-4 space-y-3 text-[13px] leading-[19px] text-[#a8b3c2]">
+                  <p>
+                    Global policy is the fallback for everyone. Tenant policy narrows it for one tenant. Server policy
+                    only affects the selected server.
+                  </p>
+                  <p>
+                    Telegram routing is tenant-wide. Silences mute notifications without deleting the underlying alerts.
+                  </p>
+                  <p>
+                    {canManageSettings
+                      ? "You can edit the values below and save them in place."
+                      : "You have read-only access here. Review the current thresholds and routing settings."}
+                  </p>
+                </div>
+                <div className="mt-5 grid gap-3">
+                  <div className="rounded-2xl border border-[#314153] bg-[#111721] px-4 py-3">
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-[#6e7f97]">Active silences</p>
+                    <p className="mt-1 text-[18px] font-semibold text-[#f2f5fa]">{activeSilenceCount}</p>
+                  </div>
+                  <div className="rounded-2xl border border-[#314153] bg-[#111721] px-4 py-3">
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-[#6e7f97]">Current scope</p>
+                    <p className="mt-1 text-[15px] font-semibold text-[#f2f5fa]">
+                      {selectedTenant?.name ?? "No tenant selected"}
+                    </p>
+                    <p className="mt-1 text-[12px] text-[#8c9eba]">
+                      {selectedServer?.name ?? "Pick a server to tune server thresholds"}
+                    </p>
+                  </div>
+                </div>
               </section>
-            ) : (
-              <div className={`${surfaceCardClass} hidden xl:block`} />
-            )}
-
-            {canManageSettings ? (
-              <section className={`${surfaceCardClass}`}>
-                <div className="inline-flex rounded-full bg-[#162437] px-3 py-1 text-[10px] font-medium uppercase tracking-[0.12em] text-[#8db6ff]">
-                  Scope
-                </div>
-                <h2 className="mt-3 text-[18px] font-semibold text-[var(--app-text)]">Server Scope</h2>
-                <p className="app-text-soft mt-1 text-[12px] leading-[18px]">
-                  Choose a server under the selected tenant to edit its alert policy.
-                </p>
-
-                <label className="mt-5 flex flex-col gap-2 text-sm">
-                  <span className="app-text-soft text-[12px]">Server</span>
-                  <select
-                    value={selectedServerId}
-                    onChange={(event) => setSelectedServerId(event.target.value)}
-                    disabled={!tenantServers.length}
-                    className="app-input h-11 rounded-xl border border-white/10 px-3 text-[13px] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
-                  >
-                    <option value="">{tenantServers.length ? "Select a server" : "No servers available"}</option>
-                    {tenantServers.map((server) => (
-                      <option key={server.id} value={server.id}>
-                        {server.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <div className="mt-4 rounded-xl border border-white/6 bg-black/10 px-3 py-2.5">
-                  <p className="app-text-soft text-[12px] leading-[18px]">
-                    Server-level thresholds override tenant and global defaults for the selected server only.
-                  </p>
-                </div>
-              </section>
-            ) : (
-              <div className={`${surfaceCardClass} hidden xl:block`} />
-            )}
-
-            <aside className={`${surfaceCardClass} xl:sticky xl:top-6 xl:self-start`}>
-              <div className="inline-flex rounded-full bg-[#1b2630] px-3 py-1 text-[10px] font-medium uppercase tracking-[0.12em] text-[#a8b3c2]">
-                Control notes
-              </div>
-              <h2 className="mt-3 text-[18px] font-semibold text-[var(--app-text)]">How this page behaves</h2>
-              <div className="mt-4 space-y-3 text-[13px] leading-[19px] text-[#a8b3c2]">
-                <p>
-                  Global policy is the fallback for everyone. Tenant policy narrows it for one tenant. Server policy
-                  only affects the selected server.
-                </p>
-                <p>
-                  Telegram routing is tenant-wide. Silences mute notifications without deleting the underlying alerts.
-                </p>
-                <p>
-                  {canManageSettings
-                    ? "You can edit the values below and save them in place."
-                    : "You have read-only access here. Review the current thresholds and routing settings."}
-                </p>
-              </div>
-              <div className="mt-5 grid gap-3">
-                <div className="rounded-2xl border border-[#314153] bg-[#111721] px-4 py-3">
-                  <p className="text-[11px] uppercase tracking-[0.18em] text-[#6e7f97]">Active silences</p>
-                  <p className="mt-1 text-[18px] font-semibold text-[#f2f5fa]">{activeSilenceCount}</p>
-                </div>
-                <div className="rounded-2xl border border-[#314153] bg-[#111721] px-4 py-3">
-                  <p className="text-[11px] uppercase tracking-[0.18em] text-[#6e7f97]">Current scope</p>
-                  <p className="mt-1 text-[15px] font-semibold text-[#f2f5fa]">
-                    {selectedTenant?.name ?? "No tenant selected"}
-                  </p>
-                  <p className="mt-1 text-[12px] text-[#8c9eba]">
-                    {selectedServer?.name ?? "Pick a server to tune server thresholds"}
-                  </p>
-                </div>
-              </div>
             </aside>
-          </div>
+
+            <div className="space-y-8">
 
           {isAdmin ? (
             <form onSubmit={handleSaveGlobalPolicy} className={`${surfaceCardClass} mt-8`}>
@@ -1557,6 +1556,8 @@ export default function AlertsPage() {
               </Link>
             </section>
           ) : null}
+            </div>
+          </div>
         </section>
       </main>
     </div>
