@@ -142,6 +142,7 @@ function alertPolicyToInput(policy: {
   serverDownForMinutes: number | null;
   containerDownForMinutes: number | null;
   containerRestartCount: number | null;
+  resourceAlertWindowMinutes: number | null;
   customMetricName: string | null;
   customPromqlQuery: string | null;
   customComparison: UpsertAlertPolicyInput["customComparison"];
