@@ -19,6 +19,7 @@ type ServerCardProps = {
 
 export default function ServerCard({ server }: ServerCardProps) {
   const openHref = server.id && server.tenantId ? `/metrics?tenantId=${server.tenantId}&serverId=${server.id}` : undefined;
+  const detailsHref = server.id && server.tenantId ? `/servers/${server.id}?tenantId=${server.tenantId}` : undefined;
   const verifyHref = server.id && server.tenantId ? `/jobs?tenantId=${server.tenantId}&serverId=${server.id}` : undefined;
   const editHref = server.id && server.tenantId ? `/servers/${server.id}/edit?tenantId=${server.tenantId}` : undefined;
   const primaryHref = server.primaryAction === "Verify" ? verifyHref : openHref;
@@ -51,6 +52,12 @@ export default function ServerCard({ server }: ServerCardProps) {
           className={`app-button-primary inline-flex h-9 items-center rounded-xl px-4 text-sm hover:brightness-110 ${primaryHref ? "" : "pointer-events-none opacity-70"}`}
         >
           {server.primaryAction}
+        </Link>
+        <Link
+          href={detailsHref ?? "#"}
+          className={`app-button-secondary inline-flex h-9 items-center rounded-xl px-4 text-sm ${detailsHref ? "" : "pointer-events-none opacity-70"}`}
+        >
+          Details
         </Link>
         <Link
           href={editHref ?? "#"}
