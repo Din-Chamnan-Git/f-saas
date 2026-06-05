@@ -1,4 +1,4 @@
-import { ApiError, apiGet, apiPost, apiPut } from "@/services/apiClient";
+import { ApiError, apiDelete, apiGet, apiPost, apiPut } from "@/services/apiClient";
 import type { SummaryCard } from "@/types/dahboard";
 import type {
   AdminFleetServerRow,
@@ -1070,6 +1070,17 @@ export async function listManagedContainers(
   serverId: string,
 ): Promise<ManagedContainerResponse[]> {
   return apiGet<ManagedContainerResponse[]>(`/api/v1/tenants/${tenantId}/servers/${serverId}/containers`, {
+    headers: buildAuthHeaders(accessToken),
+  });
+}
+
+export async function deleteManagedContainer(
+  accessToken: string,
+  tenantId: string,
+  serverId: string,
+  containerId: string,
+): Promise<void> {
+  await apiDelete<void>(`/api/v1/tenants/${tenantId}/servers/${serverId}/containers/${containerId}`, {
     headers: buildAuthHeaders(accessToken),
   });
 }

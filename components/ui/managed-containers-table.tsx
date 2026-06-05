@@ -1,7 +1,11 @@
+"use client";
+
+import { useState } from "react";
 import type { ManagedContainerResponse } from "@/services/workspaceService";
 
 type ManagedContainersTableProps = {
   rows: ManagedContainerResponse[];
+  onDeleteContainer: (containerId: string) => Promise<void>;
 };
 
 function formatTimestamp(value: string | null) {
@@ -40,7 +44,10 @@ function statusRank(status: string) {
   return 2;
 }
 
-export default function ManagedContainersTable({ rows }: ManagedContainersTableProps) {
+export default function ManagedContainersTable({ rows, onDeleteContainer }: ManagedContainersTableProps) {
+  const [deletingContainerId, setDeletingContainerId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
   const orderedRows = [...rows].sort(
     (left, right) =>
       statusRank(left.status) - statusRank(right.status) ||
@@ -51,12 +58,37 @@ export default function ManagedContainersTable({ rows }: ManagedContainersTableP
   const downCount = orderedRows.filter((row) => row.status === "down").length;
   const unknownCount = orderedRows.filter((row) => row.status === "unknown").length;
 
+  const handleDelete = async (container: ManagedContainerResponse) => {
+    const confirmed = window.confirm(
+      `Remove ${container.containerName} from the monitoring list? This only deletes the record in the monitoring app.`,
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingContainerId(container.id);
+    setError(null);
+    try {
+      await onDeleteContainer(container.id);
+    } catch (deleteError) {
+      const message =
+        deleteError instanceof Error ? deleteError.message : "Unable to delete the container from monitoring.";
+      setError(message);
+    } finally {
+      setDeletingContainerId(null);
+    }
+  };
+
   return (
     <section className="app-card mt-8 rounded-[18px] p-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
           <h2 className="text-[22px] font-semibold text-[var(--app-text)]">Managed Containers</h2>
           <p className="app-text-soft mt-2 text-[14px] leading-[20px]">Live container status from cAdvisor.</p>
+          <p className="mt-2 text-[12px] leading-[18px] text-[#8c9eba]">
+            Delete removes the row from the monitoring app only. If cAdvisor sees the container again, it can
+            reappear on the next refresh.
+          </p>
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -72,27 +104,35 @@ export default function ManagedContainersTable({ rows }: ManagedContainersTableP
         </div>
       </div>
 
+      {error ? (
+        <p className="mt-4 rounded-2xl border border-[#7f2e2e] bg-[#311f22] px-4 py-3 text-sm text-[#ffb7b7]">
+          {error}
+        </p>
+      ) : null}
+
       {!orderedRows.length ? (
         <div className="mt-5 rounded-2xl border border-dashed border-[#2d3949] bg-[#121922] px-5 py-6">
           <p className="text-sm text-[#8c9eba]">No managed containers are available for this server.</p>
         </div>
       ) : (
         <div className="mt-5 space-y-3">
-          <div className="hidden rounded-xl border border-[#273244] bg-[#141a24] px-4 py-3 text-xs text-[#8c9eba] md:grid md:grid-cols-[0.55fr_1.6fr_1.05fr]">
+          <div className="hidden rounded-xl border border-[#273244] bg-[#141a24] px-4 py-3 text-xs text-[#8c9eba] md:grid md:grid-cols-[0.55fr_1.45fr_1.05fr_auto]">
             <span>Container</span>
             <span>Status</span>
             <span>Last seen</span>
+            <span>Action</span>
           </div>
 
           {orderedRows.map((row) => {
             const statusTone = getStatusTone(row.status);
+            const isDeleting = deletingContainerId === row.id;
 
             return (
               <article
                 key={row.id}
                 className="rounded-2xl border border-[#273244] bg-[#121922] px-4 py-4 shadow-[0_16px_40px_rgba(2,7,16,0.18)]"
               >
-                <div className="grid gap-4 md:grid-cols-[0.55fr_1.6fr_1.05fr] md:items-center">
+                <div className="grid gap-4 md:grid-cols-[0.55fr_1.45fr_1.05fr_auto] md:items-center">
                   <div>
                     <p className="text-[11px] uppercase tracking-[0.18em] text-[#6e7f97]">Container</p>
                     <p className="mt-1 text-[15px] font-semibold text-[#f2f5fa]">{row.containerName}</p>
@@ -109,6 +149,17 @@ export default function ManagedContainersTable({ rows }: ManagedContainersTableP
                     <p className="text-[11px] uppercase tracking-[0.18em] text-[#6e7f97] md:hidden">Last seen</p>
                     <p className="mt-1 text-sm text-[#dce4f0]">{formatTimestamp(row.lastSeenAt)}</p>
                     <p className="mt-1 text-xs text-[#8c9eba]">{row.statusMessage ?? "No status message"}</p>
+                  </div>
+
+                  <div className="flex items-start md:justify-end">
+                    <button
+                      type="button"
+                      onClick={() => void handleDelete(row)}
+                      disabled={isDeleting}
+                      className="inline-flex h-10 items-center justify-center rounded-xl border border-[#5b2b2b] bg-[#24161a] px-4 text-sm font-medium text-[#ffb7b7] transition hover:bg-[#2c181d] disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {isDeleting ? "Deleting..." : "Delete"}
+                    </button>
                   </div>
                 </div>
               </article>

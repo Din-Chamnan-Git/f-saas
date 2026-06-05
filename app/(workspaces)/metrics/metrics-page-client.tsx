@@ -7,6 +7,7 @@ import Sidebar from "@/components/layouts/sidebar";
 import ManagedContainersTable from "@/components/ui/managed-containers-table";
 import { getCurrentUser, type UserRole } from "@/services/authService";
 import {
+  deleteManagedContainer,
   getServerMetricSeries,
   getServerOverview,
   getTopContainers,
@@ -836,6 +837,18 @@ export default function MetricsPage() {
     [selectedRefresh],
   );
 
+  const handleDeleteManagedContainer = useCallback(
+    async (containerId: string) => {
+      if (!selectedTenantId || !selectedServerId) {
+        throw new Error("Select a tenant and server before deleting a managed container.");
+      }
+
+      await deleteManagedContainer("", selectedTenantId, selectedServerId, containerId);
+      setManagedContainers((current) => current.filter((row) => row.id !== containerId));
+    },
+    [selectedServerId, selectedTenantId],
+  );
+
   const tenantOptions = useMemo<ToolbarOption[]>(
     () =>
       tenants.map((tenant) => ({
@@ -1417,7 +1430,7 @@ export default function MetricsPage() {
               </div>
 
               {selectedServer.dockerEnabled ? (
-                <ManagedContainersTable rows={managedContainers} />
+                <ManagedContainersTable rows={managedContainers} onDeleteContainer={handleDeleteManagedContainer} />
               ) : null}
             </>
           ) : null}
