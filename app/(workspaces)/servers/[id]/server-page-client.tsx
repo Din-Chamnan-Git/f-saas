@@ -425,8 +425,8 @@ export default function ServerDetailPage() {
                   {isTogglingAlerts
                     ? "Updating..."
                     : serverAlertSilences.length > 0
-                      ? "Unmute alerts"
-                      : "Mute alerts"}
+                      ? "Unmute this server"
+                      : "Mute this server"}
                 </button>
               ) : null}
             </div>

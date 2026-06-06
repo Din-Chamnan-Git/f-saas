@@ -83,7 +83,7 @@ export default function ServerCard({ server, alertMuted, isAlertToggleLoading, o
             type="button"
             onClick={() => onToggleAlerts?.()}
             disabled={isAlertToggleLoading}
-            title={alertMuted ? "Unmute alerts" : "Mute alerts"}
+            title={alertMuted ? "Unmute this server" : "Mute this server"}
             aria-label={alertMuted ? "Unmute alerts for this server" : "Mute alerts for this server"}
             className={`inline-flex h-9 w-9 items-center justify-center rounded-xl text-sm font-medium transition disabled:opacity-60 ${
               alertMuted
@@ -106,7 +106,9 @@ export default function ServerCard({ server, alertMuted, isAlertToggleLoading, o
             ) : (
               <BellIcon muted={Boolean(alertMuted)} />
             )}
-            <span className="sr-only">{isAlertToggleLoading ? "Updating alert mute state" : alertMuted ? "Unmute alerts" : "Mute alerts"}</span>
+            <span className="sr-only">
+              {isAlertToggleLoading ? "Updating server alert mute state" : alertMuted ? "Unmute this server" : "Mute this server"}
+            </span>
           </button>
         ) : null}
         <Link
