@@ -13,6 +13,33 @@ const onboardingBadgeClasses: Record<ServerRow["onboarding"], string> = {
   failed: "bg-[#4a2525] border-[#4a2525] text-[#ffb7b7]",
 };
 
+function BellIcon({ muted }: { muted: boolean }) {
+  return muted ? (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 fill-none stroke-current stroke-[1.8]">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 3l18 18" />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M15.2 17.4a3 3 0 0 1-6.4 0m7.2 0H5.8c1.1-1.1 1.8-2.5 1.8-4.1V9.8A4.4 4.4 0 0 1 12 5.4"
+      />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M11.9 4.5a4.3 4.3 0 0 1 4.4 4.3v2.5c0 .9.2 1.8.6 2.6"
+      />
+    </svg>
+  ) : (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 fill-none stroke-current stroke-[1.8]">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M15.2 17.4H8.8c1.1-1.1 1.8-2.5 1.8-4.1V9.8A4.4 4.4 0 0 1 15 5.4a4.3 4.3 0 0 1 4.4 4.3v3.6c0 1.6.7 3 1.8 4.1H15.2Z"
+      />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M10 17.4a2 2 0 0 0 4 0" />
+    </svg>
+  );
+}
+
 type ServerCardProps = {
   server: ServerRow;
   alertMuted?: boolean;
@@ -56,13 +83,30 @@ export default function ServerCard({ server, alertMuted, isAlertToggleLoading, o
             type="button"
             onClick={() => onToggleAlerts?.()}
             disabled={isAlertToggleLoading}
-            className={`inline-flex h-9 items-center rounded-xl px-4 text-sm font-medium transition disabled:opacity-60 ${
+            title={alertMuted ? "Unmute alerts" : "Mute alerts"}
+            aria-label={alertMuted ? "Unmute alerts for this server" : "Mute alerts for this server"}
+            className={`inline-flex h-9 w-9 items-center justify-center rounded-xl text-sm font-medium transition disabled:opacity-60 ${
               alertMuted
                 ? "bg-[#0f766e] text-white hover:bg-[#115e59]"
                 : "bg-[#3b2e20] text-[#ffb96d] hover:bg-[#4b3929]"
             }`}
           >
-            {isAlertToggleLoading ? "Updating..." : alertMuted ? "Unmute alerts" : "Mute alerts"}
+            {isAlertToggleLoading ? (
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                className="h-4 w-4 animate-spin fill-none stroke-current stroke-[1.8]"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M21 12a9 9 0 1 1-3.3-6.9"
+                />
+              </svg>
+            ) : (
+              <BellIcon muted={Boolean(alertMuted)} />
+            )}
+            <span className="sr-only">{isAlertToggleLoading ? "Updating alert mute state" : alertMuted ? "Unmute alerts" : "Mute alerts"}</span>
           </button>
         ) : null}
         <Link
