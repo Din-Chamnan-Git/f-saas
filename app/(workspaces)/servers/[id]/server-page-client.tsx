@@ -8,7 +8,10 @@ import WorkspaceContainer from "@/components/layouts/workspace-container";
 import StateCard from "@/components/ui/state-card";
 import { getCurrentUser, type UserRole } from "@/services/authService";
 import {
+  createAlertSilence,
+  deleteAlertSilence,
   getEffectiveAlertPolicy,
+  listAlertSilences,
   getServerAlertPolicy,
   saveServerAlertPolicy,
 } from "@/services/alertingService";
@@ -21,6 +24,7 @@ import {
   type TenantResponse,
 } from "@/services/workspaceService";
 import type { EffectiveAlertPolicy, UpsertAlertPolicyInput } from "@/types/alerting";
+import type { AlertSilence } from "@/types/alerting";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +41,8 @@ const tenantHrefByItem = {
   Servers: "/servers",
   Metrics: "/metrics",
 };
+
+const SERVER_ALERT_MUTE_END_AT = new Date(Date.UTC(2099, 11, 31, 23, 59, 59)).toISOString();
 
 function buildOverviewCards(overview: ServerOverviewResponse | null) {
   if (!overview) {
@@ -169,7 +175,9 @@ export default function ServerDetailPage() {
   const [overview, setOverview] = useState<ServerOverviewResponse | null>(null);
   const [serverPolicy, setServerPolicy] = useState<UpsertAlertPolicyInput>(EMPTY_SERVER_POLICY);
   const [effectivePolicy, setEffectivePolicy] = useState<EffectiveAlertPolicy | null>(null);
+  const [serverAlertSilences, setServerAlertSilences] = useState<AlertSilence[]>([]);
   const [isSavingPolicy, setIsSavingPolicy] = useState(false);
+  const [isTogglingAlerts, setIsTogglingAlerts] = useState(false);
   const [policyMessage, setPolicyMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -231,6 +239,13 @@ export default function ServerDetailPage() {
           enabled: serverPolicyResponse.enabled,
         });
         setEffectivePolicy(effectivePolicyResponse);
+        setServerAlertSilences(
+          await listAlertSilences(accessToken, resolvedTenantId, {
+            serverId,
+            scope: "server",
+            activeOnly: true,
+          }).catch(() => []),
+        );
 
         if (normalizedRole !== "admin") {
           setTenants([{ id: resolvedTenantId, name: "Current tenant", slug: "current-tenant", status: "ACTIVE" }]);
@@ -291,14 +306,68 @@ export default function ServerDetailPage() {
     await persistServerPolicy(serverPolicy, "Server override policy saved.");
   };
 
-  const handleToggleServerAlerts = async () => {
+  const handleToggleServerPolicyEnabled = async () => {
     await persistServerPolicy(
       {
         ...serverPolicy,
         enabled: !serverPolicy.enabled,
       },
-      serverPolicy.enabled ? "Alerts disabled for this server." : "Alerts enabled for this server.",
+      serverPolicy.enabled ? "Server override policy disabled." : "Server override policy enabled.",
     );
+  };
+
+  const refreshServerAlertSilences = async () => {
+    if (!tenantId || !serverId) {
+      return;
+    }
+
+    const silences = await listAlertSilences("", tenantId, {
+      serverId,
+      scope: "server",
+      activeOnly: true,
+    }).catch(() => []);
+
+    setServerAlertSilences(silences.filter((silence) => silence.activeNow && Boolean(silence.serverId)));
+  };
+
+  const handleToggleServerAlertMute = async () => {
+    if (!canManageAlertOverride) {
+      setError("You do not have permission to mute alerts for this server.");
+      return;
+    }
+
+    if (!tenantId || !serverId || !server) {
+      setError("Missing tenant or server id for alert mute.");
+      return;
+    }
+
+    setPolicyMessage(null);
+    setError(null);
+    setIsTogglingAlerts(true);
+
+    try {
+      const currentSilences = serverAlertSilences.filter((silence) => silence.activeNow && silence.serverId === serverId);
+
+      if (currentSilences.length > 0) {
+        await Promise.all(currentSilences.map((silence) => deleteAlertSilence("", tenantId, silence.id)));
+        setPolicyMessage("Alerts unmuted for this server.");
+      } else {
+        await createAlertSilence("", tenantId, {
+          serverId,
+          startsAt: new Date().toISOString(),
+          endsAt: SERVER_ALERT_MUTE_END_AT,
+          reason: `Muted from server detail for ${server.name}`,
+          enabled: true,
+        });
+        setPolicyMessage("Alerts muted for this server.");
+      }
+
+      await refreshServerAlertSilences();
+    } catch (toggleError) {
+      setError(toggleError instanceof Error ? toggleError.message : "Unable to update alert mute state.");
+    } finally {
+      setIsTogglingAlerts(false);
+    }
   };
 
   return (
@@ -345,19 +414,19 @@ export default function ServerDetailPage() {
               {server ? (
                 <button
                   type="button"
-                  onClick={() => void handleToggleServerAlerts()}
-                  disabled={!canManageAlertOverride || isSavingPolicy}
+                  onClick={() => void handleToggleServerAlertMute()}
+                  disabled={!canManageAlertOverride || isTogglingAlerts}
                   className={`inline-flex h-11 items-center justify-center rounded-xl px-6 text-sm font-medium transition disabled:opacity-60 ${
-                    serverPolicy.enabled
-                      ? "bg-[#1f2937] text-white hover:bg-[#111827]"
-                      : "bg-[#0f766e] text-white hover:bg-[#115e59]"
+                    serverAlertSilences.length > 0
+                      ? "bg-[#0f766e] text-white hover:bg-[#115e59]"
+                      : "bg-[#3b2e20] text-[#ffb96d] hover:bg-[#4b3929]"
                   }`}
                 >
-                  {isSavingPolicy
+                  {isTogglingAlerts
                     ? "Updating..."
-                    : serverPolicy.enabled
-                      ? "Disable alerts"
-                      : "Enable alerts"}
+                    : serverAlertSilences.length > 0
+                      ? "Unmute alerts"
+                      : "Mute alerts"}
                 </button>
               ) : null}
             </div>
@@ -468,12 +537,13 @@ export default function ServerDetailPage() {
                   <div>
                     <h2 className="app-section-title">Server Override Policy</h2>
                     <p className="app-text-soft mt-2 max-w-[760px] text-[14px] leading-[20px]">
-                      Override tenant/global thresholds for this server only. Admin and owner can update this policy.
+                      Override tenant/global thresholds for this server only. This affects generated server-specific rules,
+                      not alert silences. Admin and owner can update this policy.
                     </p>
                   </div>
                   <button
                     type="button"
-                    onClick={() => void handleToggleServerAlerts()}
+                    onClick={() => void handleToggleServerPolicyEnabled()}
                     disabled={!canManageAlertOverride || isSavingPolicy}
                     className={`inline-flex h-11 items-center justify-center rounded-xl px-5 text-sm font-medium transition disabled:opacity-60 ${
                       serverPolicy.enabled
@@ -484,8 +554,8 @@ export default function ServerDetailPage() {
                     {isSavingPolicy
                       ? "Updating..."
                       : serverPolicy.enabled
-                        ? "Disable alerts"
-                        : "Enable alerts"}
+                        ? "Disable override"
+                        : "Enable override"}
                   </button>
                 </div>
 
@@ -675,10 +745,10 @@ export default function ServerDetailPage() {
                   />
                   <div className="min-w-0">
                     <p className="text-[14px] text-[var(--app-text)]">
-                      Alerts are currently <span className="font-medium">{serverPolicy.enabled ? "enabled" : "disabled"}</span>
+                      Override policy is currently <span className="font-medium">{serverPolicy.enabled ? "enabled" : "disabled"}</span>
                     </p>
                     <p className="app-text-soft mt-1 text-[12px]">
-                      When disabled, this server will not generate Prometheus alert rules.
+                      When disabled, this server will not generate server-specific Prometheus alert rules.
                     </p>
                   </div>
                 </div>

@@ -15,14 +15,18 @@ const onboardingBadgeClasses: Record<ServerRow["onboarding"], string> = {
 
 type ServerCardProps = {
   server: ServerRow;
+  alertMuted?: boolean;
+  isAlertToggleLoading?: boolean;
+  onToggleAlerts?: () => void;
 };
 
-export default function ServerCard({ server }: ServerCardProps) {
+export default function ServerCard({ server, alertMuted, isAlertToggleLoading, onToggleAlerts }: ServerCardProps) {
   const openHref = server.id && server.tenantId ? `/metrics?tenantId=${server.tenantId}&serverId=${server.id}` : undefined;
   const detailsHref = server.id && server.tenantId ? `/servers/${server.id}?tenantId=${server.tenantId}` : undefined;
   const verifyHref = server.id && server.tenantId ? `/jobs?tenantId=${server.tenantId}&serverId=${server.id}` : undefined;
   const editHref = server.id && server.tenantId ? `/servers/${server.id}/edit?tenantId=${server.tenantId}` : undefined;
   const primaryHref = server.primaryAction === "Verify" ? verifyHref : openHref;
+  const canToggleAlerts = typeof alertMuted === "boolean" && onToggleAlerts;
 
   return (
     <article className="app-card rounded-2xl p-4 md:grid md:grid-cols-[1.5fr_0.9fr_0.9fr_0.7fr_0.7fr_0.8fr] md:items-center md:gap-3">
@@ -47,6 +51,20 @@ export default function ServerCard({ server }: ServerCardProps) {
       <p className="app-text-soft mt-1 text-sm md:mt-0">{server.logs}</p>
 
       <div className="mt-4 flex gap-2 md:mt-0 md:justify-end">
+        {canToggleAlerts ? (
+          <button
+            type="button"
+            onClick={() => onToggleAlerts?.()}
+            disabled={isAlertToggleLoading}
+            className={`inline-flex h-9 items-center rounded-xl px-4 text-sm font-medium transition disabled:opacity-60 ${
+              alertMuted
+                ? "bg-[#0f766e] text-white hover:bg-[#115e59]"
+                : "bg-[#3b2e20] text-[#ffb96d] hover:bg-[#4b3929]"
+            }`}
+          >
+            {isAlertToggleLoading ? "Updating..." : alertMuted ? "Unmute alerts" : "Mute alerts"}
+          </button>
+        ) : null}
         <Link
           href={primaryHref ?? "#"}
           className={`app-button-primary inline-flex h-9 items-center rounded-xl px-4 text-sm hover:brightness-110 ${primaryHref ? "" : "pointer-events-none opacity-70"}`}

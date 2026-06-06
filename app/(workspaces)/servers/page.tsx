@@ -8,10 +8,16 @@ import ServerCard from "@/components/ui/server-card";
 import StateCard from "@/components/ui/state-card";
 import { getCurrentUser, type UserRole } from "@/services/authService";
 import {
+  createAlertSilence,
+  deleteAlertSilence,
+  listAlertSilences,
+} from "@/services/alertingService";
+import {
   getAdminServerDirectoryData,
   getTenantWorkspaceDashboardData,
   type AdminServerDirectoryData,
 } from "@/services/workspaceService";
+import type { AlertSilence } from "@/types/alerting";
 import type { ServerRow } from "@/types/server";
 
 const adminNavItems = ["Dashboard", "Tenants", "Servers", "Onboarding Jobs", "Metrics", "Alerts", "Logs"];
@@ -26,6 +32,38 @@ const tenantHrefByItem = {
   Servers: "/servers",
 };
 
+const SERVER_ALERT_MUTE_END_AT = new Date(Date.UTC(2099, 11, 31, 23, 59, 59)).toISOString();
+
+async function loadActiveServerAlertSilences(
+  accessToken: string,
+  serverRows: ServerRow[],
+): Promise<Record<string, AlertSilence[]>> {
+  const tenantIds = [...new Set(serverRows.map((server) => server.tenantId).filter((tenantId): tenantId is string => Boolean(tenantId)))];
+  const silenceRowsByTenant = await Promise.all(
+    tenantIds.map(async (tenantId) => {
+      const silences = await listAlertSilences(accessToken, tenantId, {
+        scope: "server",
+        activeOnly: true,
+      }).catch(() => []);
+
+      return silences.filter((silence) => silence.activeNow && Boolean(silence.serverId));
+    }),
+  );
+
+  const byServerId: Record<string, AlertSilence[]> = {};
+  for (const silenceRows of silenceRowsByTenant) {
+    for (const silence of silenceRows) {
+      if (!silence.serverId) {
+        continue;
+      }
+
+      byServerId[silence.serverId] = [...(byServerId[silence.serverId] ?? []), silence];
+    }
+  }
+
+  return byServerId;
+}
+
 export default function ServersPage() {
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [tenantName, setTenantName] = useState("Current Tenant");
@@ -34,10 +72,14 @@ export default function ServersPage() {
   >([]);
   const [adminDirectory, setAdminDirectory] = useState<AdminServerDirectoryData | null>(null);
   const [serverRows, setServerRows] = useState<ServerRow[]>([]);
+  const [serverAlertSilencesByServerId, setServerAlertSilencesByServerId] = useState<Record<string, AlertSilence[]>>({});
+  const [activeAlertActionServerId, setActiveAlertActionServerId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [needsTenantCreation, setNeedsTenantCreation] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const canManageServerAlertSilences = userRole === "admin" || userRole === "owner";
 
   const filteredServerRows = useMemo(() => {
     const keyword = searchTerm.trim().toLowerCase();
@@ -70,6 +112,7 @@ export default function ServersPage() {
         setTenantName(directory.currentView.name);
         setSummaryCards(directory.summaryCards);
         setServerRows(directory.serverRows);
+        setServerAlertSilencesByServerId(await loadActiveServerAlertSilences(accessToken, directory.serverRows));
         if (!directory.serverRows.length) {
           setNeedsTenantCreation(true);
         }
@@ -85,6 +128,7 @@ export default function ServersPage() {
       setTenantName(dashboard.tenantName);
       setSummaryCards(dashboard.summaryCards);
       setServerRows(dashboard.serverRows);
+      setServerAlertSilencesByServerId(await loadActiveServerAlertSilences(accessToken, dashboard.serverRows));
     } catch (loadError) {
       const message = loadError instanceof Error ? loadError.message : "Unable to load servers.";
       setError(message);
@@ -97,6 +141,56 @@ export default function ServersPage() {
   useEffect(() => {
     void loadServers();
   }, []);
+
+  const refreshAlertSilenceState = async (rows: ServerRow[]) => {
+    const accessToken = "";
+    setServerAlertSilencesByServerId(await loadActiveServerAlertSilences(accessToken, rows));
+  };
+
+  const handleToggleServerAlertMute = async (server: ServerRow) => {
+    if (!canManageServerAlertSilences) {
+      setError("You do not have permission to mute alerts for this server.");
+      return;
+    }
+
+    if (!server.id || !server.tenantId) {
+      setError("Missing tenant or server id for alert toggle.");
+      return;
+    }
+
+    setError(null);
+    setActiveAlertActionServerId(server.id);
+
+    try {
+      const currentSilences = serverAlertSilencesByServerId[server.id] ?? [];
+      if (currentSilences.length > 0) {
+        await Promise.all(currentSilences.map((silence) => deleteAlertSilence("", server.tenantId as string, silence.id)));
+        setServerAlertSilencesByServerId((current) => {
+          const next = { ...current };
+          delete next[server.id as string];
+          return next;
+        });
+      } else {
+        const createdSilence = await createAlertSilence("", server.tenantId as string, {
+          serverId: server.id,
+          startsAt: new Date().toISOString(),
+          endsAt: SERVER_ALERT_MUTE_END_AT,
+          reason: `Muted from server list for ${server.name}`,
+          enabled: true,
+        });
+        setServerAlertSilencesByServerId((current) => ({
+          ...current,
+          [server.id as string]: [createdSilence],
+        }));
+      }
+
+      await refreshAlertSilenceState(serverRows);
+    } catch (toggleError) {
+      setError(toggleError instanceof Error ? toggleError.message : "Unable to update alert mute state.");
+    } finally {
+      setActiveAlertActionServerId(null);
+    }
+  };
 
   const navItems = userRole === "admin" ? adminNavItems : tenantNavItems;
   const hrefByItem = userRole === "admin" ? adminHrefByItem : tenantHrefByItem;
@@ -237,7 +331,13 @@ export default function ServersPage() {
 
               <div className="mt-3 space-y-3">
                 {filteredServerRows.map((server) => (
-                  <ServerCard key={`${server.name}-${server.ip}`} server={server} />
+                  <ServerCard
+                    key={`${server.name}-${server.ip}`}
+                    server={server}
+                    alertMuted={Boolean(server.id && serverAlertSilencesByServerId[server.id]?.length)}
+                    isAlertToggleLoading={server.id === activeAlertActionServerId}
+                    onToggleAlerts={canManageServerAlertSilences && server.id ? () => void handleToggleServerAlertMute(server) : undefined}
+                  />
                 ))}
                 {!filteredServerRows.length ? (
                   <p className="app-card app-text-soft rounded-2xl p-4 text-sm">
