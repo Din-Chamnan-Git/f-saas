@@ -263,8 +263,7 @@ export default function ServerDetailPage() {
   const summaryCards = buildOverviewCards(overview);
   const canManageAlertOverride = userRole === "admin" || userRole === "owner";
 
-  const handleSaveServerPolicy = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const persistServerPolicy = async (nextPolicy: UpsertAlertPolicyInput, successMessage: string) => {
     setPolicyMessage(null);
     setError(null);
 
@@ -275,15 +274,31 @@ export default function ServerDetailPage() {
 
     setIsSavingPolicy(true);
     try {
-      await saveServerAlertPolicy("", tenantId, serverId, serverPolicy);
+      await saveServerAlertPolicy("", tenantId, serverId, nextPolicy);
+      setServerPolicy(nextPolicy);
       const refreshedEffective = await getEffectiveAlertPolicy("", tenantId, serverId).catch(() => null);
       setEffectivePolicy(refreshedEffective);
-      setPolicyMessage("Server override policy saved.");
+      setPolicyMessage(successMessage);
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "Unable to save server override policy.");
     } finally {
       setIsSavingPolicy(false);
     }
+  };
+
+  const handleSaveServerPolicy = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    await persistServerPolicy(serverPolicy, "Server override policy saved.");
+  };
+
+  const handleToggleServerAlerts = async () => {
+    await persistServerPolicy(
+      {
+        ...serverPolicy,
+        enabled: !serverPolicy.enabled,
+      },
+      serverPolicy.enabled ? "Alerts disabled for this server." : "Alerts enabled for this server.",
+    );
   };
 
   return (
@@ -326,6 +341,24 @@ export default function ServerDetailPage() {
                 >
                   Edit Server
                 </Link>
+              ) : null}
+              {server ? (
+                <button
+                  type="button"
+                  onClick={() => void handleToggleServerAlerts()}
+                  disabled={!canManageAlertOverride || isSavingPolicy}
+                  className={`inline-flex h-11 items-center justify-center rounded-xl px-6 text-sm font-medium transition disabled:opacity-60 ${
+                    serverPolicy.enabled
+                      ? "bg-[#1f2937] text-white hover:bg-[#111827]"
+                      : "bg-[#0f766e] text-white hover:bg-[#115e59]"
+                  }`}
+                >
+                  {isSavingPolicy
+                    ? "Updating..."
+                    : serverPolicy.enabled
+                      ? "Disable alerts"
+                      : "Enable alerts"}
+                </button>
               ) : null}
             </div>
           }
@@ -431,10 +464,30 @@ export default function ServerDetailPage() {
 
               <form onSubmit={handleSaveServerPolicy} className="app-card mt-6 rounded-3xl p-6">
                 <p className="app-kicker">Alerts</p>
-                <h2 className="app-section-title mt-4">Server Override Policy</h2>
-                <p className="app-text-soft mt-3 max-w-[760px] text-[14px] leading-[20px]">
-                  Override tenant/global thresholds for this server only. Admin and owner can update this policy.
-                </p>
+                <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <h2 className="app-section-title">Server Override Policy</h2>
+                    <p className="app-text-soft mt-2 max-w-[760px] text-[14px] leading-[20px]">
+                      Override tenant/global thresholds for this server only. Admin and owner can update this policy.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void handleToggleServerAlerts()}
+                    disabled={!canManageAlertOverride || isSavingPolicy}
+                    className={`inline-flex h-11 items-center justify-center rounded-xl px-5 text-sm font-medium transition disabled:opacity-60 ${
+                      serverPolicy.enabled
+                        ? "bg-[#1f2937] text-white hover:bg-[#111827]"
+                        : "bg-[#0f766e] text-white hover:bg-[#115e59]"
+                    }`}
+                  >
+                    {isSavingPolicy
+                      ? "Updating..."
+                      : serverPolicy.enabled
+                        ? "Disable alerts"
+                        : "Enable alerts"}
+                  </button>
+                </div>
 
                 <div className="mt-6 grid gap-4 md:grid-cols-3">
                   <label className="block">
@@ -613,15 +666,22 @@ export default function ServerDetailPage() {
                   />
                 </label>
 
-                <label className="mt-4 flex items-center gap-3 text-[14px]">
-                  <input
-                    type="checkbox"
-                    checked={serverPolicy.enabled}
-                    onChange={(event) => setServerPolicy((current) => ({ ...current, enabled: event.target.checked }))}
-                    disabled={!canManageAlertOverride}
+                <div className="mt-4 flex items-center gap-3 rounded-2xl border border-white/10 bg-black/10 px-4 py-3">
+                  <div
+                    className={`h-3 w-3 rounded-full ${
+                      serverPolicy.enabled ? "bg-[#0f766e]" : "bg-[#dc2626]"
+                    }`}
+                    aria-hidden="true"
                   />
-                  <span className="app-text-soft">Server override enabled</span>
-                </label>
+                  <div className="min-w-0">
+                    <p className="text-[14px] text-[var(--app-text)]">
+                      Alerts are currently <span className="font-medium">{serverPolicy.enabled ? "enabled" : "disabled"}</span>
+                    </p>
+                    <p className="app-text-soft mt-1 text-[12px]">
+                      When disabled, this server will not generate Prometheus alert rules.
+                    </p>
+                  </div>
+                </div>
 
                 {policyMessage ? <p className="mt-4 text-sm text-[#7bd7a6]">{policyMessage}</p> : null}
 
