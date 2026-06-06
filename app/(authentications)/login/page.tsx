@@ -7,11 +7,6 @@ import { TecheyLogo } from "@/components/branding/techey-logo";
 import { apiPost } from "@/services/apiClient";
 import { getCurrentUser } from "@/services/authService";
 
-type LoginResult = {
-  accessToken: string;
-  refreshToken: string;
-};
-
 type LoginBody = {
   email: string;
   password: string;
@@ -52,7 +47,7 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      await apiPost<LoginResult, LoginBody>("/api/v1/auth/login", { email, password, rememberDevice });
+      await apiPost<void, LoginBody>("/api/v1/auth/login", { email, password, rememberDevice });
 
       router.push("/dashboard");
     } catch (submitError) {

@@ -16,12 +16,6 @@ type ApiResponseEnvelope<T> = {
   data?: T;
 };
 
-type LoginResponse = {
-  accessToken: string;
-  refreshToken: string;
-  tokenType?: string;
-};
-
 type CsrfResponse = {
   csrfToken: string;
 };
@@ -134,8 +128,8 @@ async function refreshAccessToken(): Promise<string | null> {
           ...requestInit,
         });
 
-        const payload = await parseApiResponse<LoginResponse>(response);
-        return payload.accessToken ?? "refreshed";
+        await parseApiResponse<void>(response);
+        return "refreshed";
       } catch {
         clearStoredAuth();
         return null;
