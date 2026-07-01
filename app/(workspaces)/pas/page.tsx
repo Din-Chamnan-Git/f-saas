@@ -26,153 +26,6 @@ interface Project {
   notes: string;
 }
 
-const INITIAL_PROJECTS: Project[] = [
-  {
-    id: "1",
-    projectName: "SSMC",
-    client: "SSMC Ltd",
-    deployDate: "30/03/2026",
-    duration: "3",
-    contractEnd: "30/06/2026",
-    status: "Prod",
-    environment: "AWS",
-    owner: "DevOps-",
-    notes: ""
-  },
-  {
-    id: "2",
-    projectName: "Francele",
-    client: "Francele Shop",
-    deployDate: "25/12/2025",
-    duration: "4",
-    contractEnd: "25/04/2026",
-    status: "Prod",
-    environment: "VPS",
-    owner: "DevOps-",
-    notes: ""
-  },
-  {
-    id: "3",
-    projectName: "brandfriend-server",
-    client: "BrandFriend",
-    deployDate: "",
-    duration: "",
-    contractEnd: "",
-    status: "Prod",
-    environment: "Hetzner (Helsinki)",
-    owner: "DevOps-",
-    notes: "IP: 89.167.83.54"
-  },
-  {
-    id: "4",
-    projectName: "e-commerce-server",
-    client: "E-Commerce",
-    deployDate: "",
-    duration: "",
-    contractEnd: "",
-    status: "Prod",
-    environment: "Hetzner (Helsinki)",
-    owner: "DevOps-",
-    notes: "IP: 204.168.187.64"
-  },
-  {
-    id: "5",
-    projectName: "aica-api-prod",
-    client: "AICA",
-    deployDate: "",
-    duration: "",
-    contractEnd: "",
-    status: "Prod",
-    environment: "Hetzner (Helsinki)",
-    owner: "DevOps-",
-    notes: "IP: 62.238.31.129"
-  },
-  {
-    id: "6",
-    projectName: "ssmc-backend-prod",
-    client: "SSMC",
-    deployDate: "",
-    duration: "",
-    contractEnd: "",
-    status: "Prod",
-    environment: "Hetzner (Helsinki)",
-    owner: "DevOps-",
-    notes: "IP: 65.21.0.253"
-  },
-  {
-    id: "7",
-    projectName: "reply-bot-server",
-    client: "Reply Bot",
-    deployDate: "",
-    duration: "",
-    contractEnd: "",
-    status: "Prod",
-    environment: "Hetzner (Helsinki)",
-    owner: "DevOps-",
-    notes: "IP: 65.109.226.202"
-  },
-  {
-    id: "8",
-    projectName: "jenkins-server-no-delete",
-    client: "Internal",
-    deployDate: "",
-    duration: "",
-    contractEnd: "",
-    status: "Maintenance",
-    environment: "Hetzner (Helsinki)",
-    owner: "DevOps-",
-    notes: "IP: 37.27.180.31 | CI/CD do not delete"
-  },
-  {
-    id: "9",
-    projectName: "pos-server-01",
-    client: "POS Client",
-    deployDate: "",
-    duration: "",
-    contractEnd: "",
-    status: "Prod",
-    environment: "Hetzner (Helsinki)",
-    owner: "DevOps-",
-    notes: "IP: 89.167.6.46"
-  },
-  {
-    id: "10",
-    projectName: "scan-staff-attendance-new-prod-app",
-    client: "HR Client",
-    deployDate: "",
-    duration: "",
-    contractEnd: "",
-    status: "Prod",
-    environment: "Hetzner (Helsinki)",
-    owner: "DevOps-",
-    notes: "IP: 95.217.132.199"
-  },
-  {
-    id: "11",
-    projectName: "dev-server-01",
-    client: "Internal",
-    deployDate: "",
-    duration: "",
-    contractEnd: "",
-    status: "Dev",
-    environment: "Hetzner (Helsinki)",
-    owner: "DevOps-",
-    notes: "IP: 46.62.230.113"
-  },
-  {
-    id: "12",
-    projectName: "equip-manager",
-    client: "Equip Manager",
-    deployDate: "",
-    duration: "",
-    contractEnd: "",
-    status: "Prod",
-    environment: "Hetzner (Helsinki)",
-    owner: "DevOps-",
-    notes: "IP: 77.42.24.119"
-  }
-];
-
 const adminNavItems = ["Dashboard", "Tenants", "Servers", "PAS Projects", "Onboarding Jobs", "Metrics", "Alerts", "Logs"];
 const tenantNavItems = ["Dashboard", "Servers", "PAS Projects", "Onboarding Jobs", "Metrics", "Alerts", "Logs"];
 const adminHrefByItem = {
@@ -192,6 +45,7 @@ export default function PasProjectsPage() {
   const [tenantName, setTenantName] = useState("Current Tenant");
   const [tenantId, setTenantId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Projects State
   const [projects, setProjects] = useState<Project[]>([]);
@@ -213,28 +67,13 @@ export default function PasProjectsPage() {
     notes: ""
   });
 
-  const loadFromLocalStorage = () => {
-    const savedProjects = localStorage.getItem("pas_projects");
-    if (savedProjects) {
-      try {
-        setProjects(JSON.parse(savedProjects));
-      } catch {
-        setProjects(INITIAL_PROJECTS);
-        localStorage.setItem("pas_projects", JSON.stringify(INITIAL_PROJECTS));
-      }
-    } else {
-      setProjects(INITIAL_PROJECTS);
-      localStorage.setItem("pas_projects", JSON.stringify(INITIAL_PROJECTS));
-    }
-  };
-
   const fetchProjects = async (tId: string) => {
     try {
       const backendProjects = await listProjects("", tId);
       setProjects(backendProjects);
     } catch (err) {
       console.error("Failed to fetch projects from backend database:", err);
-      loadFromLocalStorage();
+      setError("Unable to load projects from the server.");
     }
   };
 
@@ -255,7 +94,7 @@ export default function PasProjectsPage() {
       if (tId) {
         await fetchProjects(tId);
       } else {
-        loadFromLocalStorage();
+        setError("No active tenant available.");
       }
       setIsLoading(false);
     };
@@ -318,102 +157,62 @@ export default function PasProjectsPage() {
       return;
     }
 
-    if (tenantId) {
-      try {
-        if (editingProject) {
-          await updateProject("", tenantId, editingProject.id, {
-            projectName: formData.projectName,
-            client: formData.client,
-            deployDate: formData.deployDate,
-            duration: formData.duration,
-            contractEnd: formData.contractEnd,
-            status: formData.status,
-            environment: formData.environment,
-            owner: formData.owner,
-            notes: formData.notes
-          });
-        } else {
-          await createProject("", tenantId, {
-            projectName: formData.projectName,
-            client: formData.client,
-            deployDate: formData.deployDate,
-            duration: formData.duration,
-            contractEnd: formData.contractEnd,
-            status: formData.status,
-            environment: formData.environment,
-            owner: formData.owner,
-            notes: formData.notes
-          });
-        }
-        await fetchProjects(tenantId);
-        setIsDrawerOpen(false);
-        return;
-      } catch (err) {
-        console.error("Failed to save project to backend database:", err);
+    if (!tenantId) {
+      alert("No active tenant to save to.");
+      return;
+    }
+
+    try {
+      if (editingProject) {
+        await updateProject("", tenantId, editingProject.id, {
+          projectName: formData.projectName,
+          client: formData.client,
+          deployDate: formData.deployDate,
+          duration: formData.duration,
+          contractEnd: formData.contractEnd,
+          status: formData.status,
+          environment: formData.environment,
+          owner: formData.owner,
+          notes: formData.notes
+        });
+      } else {
+        await createProject("", tenantId, {
+          projectName: formData.projectName,
+          client: formData.client,
+          deployDate: formData.deployDate,
+          duration: formData.duration,
+          contractEnd: formData.contractEnd,
+          status: formData.status,
+          environment: formData.environment,
+          owner: formData.owner,
+          notes: formData.notes
+        });
       }
+      await fetchProjects(tenantId);
+      setIsDrawerOpen(false);
+    } catch (err) {
+      console.error("Failed to save project to backend database:", err);
+      alert("Error saving project: " + (err instanceof Error ? err.message : "Unknown error"));
     }
-
-    // Fallback: LocalStorage
-    let updatedProjects: Project[];
-
-    if (editingProject) {
-      // Edit mode
-      updatedProjects = projects.map((p) =>
-        p.id === editingProject.id
-          ? {
-              ...p,
-              projectName: formData.projectName,
-              client: formData.client,
-              deployDate: formData.deployDate,
-              duration: formData.duration,
-              contractEnd: formData.contractEnd,
-              status: formData.status,
-              environment: formData.environment,
-              owner: formData.owner,
-              notes: formData.notes
-            }
-          : p
-      );
-    } else {
-      // Create mode
-      const newProject: Project = {
-        id: String(Date.now()),
-        projectName: formData.projectName,
-        client: formData.client,
-        deployDate: formData.deployDate,
-        duration: formData.duration,
-        contractEnd: formData.contractEnd,
-        status: formData.status,
-        environment: formData.environment,
-        owner: formData.owner,
-        notes: formData.notes
-      };
-      updatedProjects = [newProject, ...projects];
-    }
-
-    setProjects(updatedProjects);
-    localStorage.setItem("pas_projects", JSON.stringify(updatedProjects));
-    setIsDrawerOpen(false);
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this project?")) {
-      if (tenantId) {
-        try {
-          await deleteProject("", tenantId, id);
-          await fetchProjects(tenantId);
-          setIsDrawerOpen(false);
-          return;
-        } catch (err) {
-          console.error("Failed to delete project from backend database:", err);
-        }
-      }
+    if (!confirm("Are you sure you want to delete this project?")) {
+      return;
+    }
 
-      // Fallback: LocalStorage
-      const updated = projects.filter((p) => p.id !== id);
-      setProjects(updated);
-      localStorage.setItem("pas_projects", JSON.stringify(updated));
+    if (!tenantId) {
+      alert("No active tenant to delete from.");
+      return;
+    }
+
+    try {
+      await deleteProject("", tenantId, id);
+      await fetchProjects(tenantId);
       setIsDrawerOpen(false);
+    } catch (err) {
+      console.error("Failed to delete project from backend database:", err);
+      alert("Error deleting project: " + (err instanceof Error ? err.message : "Unknown error"));
     }
   };
 
