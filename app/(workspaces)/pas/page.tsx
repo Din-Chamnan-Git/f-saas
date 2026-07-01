@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import Sidebar from "@/components/layouts/sidebar";
 import WorkspaceContainer from "@/components/layouts/workspace-container";
 import { getCurrentUser, type UserRole } from "@/services/authService";
+import { listTenants } from "@/services/workspaceService";
 import {
   listProjects,
   createProject,
@@ -82,9 +83,28 @@ export default function PasProjectsPage() {
       let tId = "";
       try {
         const currentUser = await getCurrentUser();
-        setUserRole(currentUser.role.toLowerCase() as UserRole);
-        setTenantName(currentUser.tenantId ? `Tenant ${currentUser.tenantId.slice(0, 8)}` : "Current Tenant");
+        const role = currentUser.role.toLowerCase() as UserRole;
+        setUserRole(role);
+        
         tId = currentUser.tenantId || "";
+        
+        if (!tId && role === "admin") {
+          try {
+            const tenants = await listTenants("");
+            if (tenants.length > 0) {
+              tId = tenants[0].id;
+              setTenantName(`Tenant ${tId.slice(0, 8)} (${tenants[0].name})`);
+            } else {
+              setTenantName("Default Tenant");
+            }
+          } catch (err) {
+            console.error("Failed to load tenants for admin:", err);
+            setTenantName("Default Tenant");
+          }
+        } else {
+          setTenantName(currentUser.tenantId ? `Tenant ${currentUser.tenantId.slice(0, 8)}` : "Current Tenant");
+        }
+        
         setTenantId(tId);
       } catch {
         setUserRole("admin");
