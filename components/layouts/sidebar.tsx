@@ -11,6 +11,7 @@ const defaultHrefByItem: Record<string, string | undefined> = {
   Metrics: "/metrics",
   Alerts: "/alerts",
   Logs: "/logs",
+  "PAS Projects": "/pas",
 };
 
 const navItemMeta: Record<string, { icon: string; category: "overview" | "operations" }> = {
@@ -23,6 +24,7 @@ const navItemMeta: Record<string, { icon: string; category: "overview" | "operat
   Alerts: { icon: "A", category: "overview" },
   Logs: { icon: "L", category: "overview" },
   Profile: { icon: "P", category: "operations" },
+  "PAS Projects": { icon: "P", category: "operations" },
 };
 
 export default function Sidebar({ navItems, activeItem, tenant, sectionLabel, hrefByItem }: SidebarProps) {
@@ -35,6 +37,7 @@ export default function Sidebar({ navItems, activeItem, tenant, sectionLabel, hr
   const profileIsActive = activeItem === "Profile";
   const hasAccountAvatar = Boolean(tenant.avatarText);
   const availableItems = new Set(navItems);
+  availableItems.add("PAS Projects");
 
   if (isAdminConsole) {
     availableItems.add("Owners");
@@ -48,7 +51,7 @@ export default function Sidebar({ navItems, activeItem, tenant, sectionLabel, hr
         },
         {
           title: "DIRECTORY",
-          items: ["Tenants", "Owners", "Servers"].filter((item) => availableItems.has(item)),
+          items: ["Tenants", "Owners", "Servers", "PAS Projects"].filter((item) => availableItems.has(item)),
         },
         {
           title: "DELIVERY",
@@ -62,11 +65,11 @@ export default function Sidebar({ navItems, activeItem, tenant, sectionLabel, hr
     : [
         {
           title: "OBSERVE",
-          items: navItems.filter((item) => navItemMeta[item]?.category === "overview"),
+          items: Array.from(availableItems).filter((item) => navItemMeta[item]?.category === "overview"),
         },
         {
           title: "OPERATE",
-          items: navItems.filter((item) => navItemMeta[item]?.category !== "overview"),
+          items: Array.from(availableItems).filter((item) => navItemMeta[item]?.category !== "overview"),
         },
       ].filter((section) => section.items.length > 0);
 
@@ -81,6 +84,7 @@ export default function Sidebar({ navItems, activeItem, tenant, sectionLabel, hr
         Alerts: "Alerts",
         Logs: "Logs",
         Profile: "Profile",
+        "PAS Projects": "PAS Projects",
       }
     : {};
 
