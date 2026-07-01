@@ -42,7 +42,7 @@ export interface UpdateProjectInput {
   notes?: string;
 }
 
-function buildAuthHeaders(accessToken?: string) {
+function buildAuthHeaders(accessToken?: string): Record<string, string> {
   if (!accessToken) return {};
   return {
     Authorization: `Bearer ${accessToken}`,
